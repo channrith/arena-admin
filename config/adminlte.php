@@ -321,11 +321,18 @@ return [
             'can' => 'manage-blog',
         ],
         [
-            'text' => 'pages',
-            'url' => 'admin/pages',
-            'icon' => 'far fa-fw fa-file',
-            'label' => 4,
-            'label_color' => 'success',
+            'text' => 'news',
+            'icon' => 'fas fa-fw fa-file',
+            'submenu' => [
+                [
+                    'text' => 'all',
+                    'url' => '/news',
+                ],
+                [
+                    'text' => 'add',
+                    'url' => '/news/create',
+                ],
+            ],
         ],
         ['header' => 'account_settings'],
         [
