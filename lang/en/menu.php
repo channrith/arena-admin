@@ -2,7 +2,7 @@
 
 return [
 
-    'news' => 'News',
-    'all' => 'All',
-    'add' => 'Add News',
+    'posts' => 'Posts',
+    'all' => 'All Posts',
+    'add' => 'Add New Post',
 ];

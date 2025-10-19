@@ -321,16 +321,16 @@ return [
             'can' => 'manage-blog',
         ],
         [
-            'text' => 'news',
+            'text' => 'posts',
             'icon' => 'fas fa-fw fa-file',
             'submenu' => [
                 [
                     'text' => 'all',
-                    'url' => '/news',
+                    'url' => '/posts',
                 ],
                 [
                     'text' => 'add',
-                    'url' => '/news/create',
+                    'url' => '/posts/create',
                 ],
             ],
         ],

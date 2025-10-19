@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\NewsController;
+use App\Http\Controllers\PostController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -11,7 +11,10 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');
-Route::get('/news', [NewsController::class, 'index'])->name('news.list');
-Route::get('/news/create', [NewsController::class, 'create'])->name('news.add');
-Route::post('/news', [NewsController::class, 'store'])->name('news.store');
+Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
+Route::get('/posts/{id}/edit', [PostController::class, 'edit'])->name('posts.edit');
+Route::get('/posts/create', [PostController::class, 'create'])->name('posts.add');
+Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+Route::put('/posts/{id}', [PostController::class, 'update'])->name('posts.update');
+Route::delete('/posts/{id}', [PostController::class, 'destroy'])->name('posts.destroy');
 
