@@ -83,6 +83,8 @@ class PostController extends Controller
             return back()->withErrors(['feature_image' => 'Failed to upload image to CDN.']);
         }
 
+        $locale = app()->getLocale();
+
         // $cdnUrl = $response->json('url');
         $cdnFilePath = $response->json('filePath');
 
@@ -94,7 +96,7 @@ class PostController extends Controller
         ]);
 
         $post->translations()->create([
-            'language_code' => 'km',
+            'language_code' => $locale,
             'title' => $validated['title'],
             'summary' => $validated['summary'],
             'content' => $validated['content'],
