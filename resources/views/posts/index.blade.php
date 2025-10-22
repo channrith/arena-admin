@@ -34,6 +34,7 @@
                         <tr>
                             <th>ID</th>
                             <th>Title</th>
+                            <th></th>
                             <th>Published Date</th>
                             <th>Status</th>
                             <th>Author</th>
@@ -45,7 +46,12 @@
                         <tr>
                             <td>{{$key + 1}}</td>
                             <td>{{ $post->currentTranslation->title }}</td>
-                            <td>{{ $post->published_at ? $post->published_at->format('d M Y') : '' }}</td>
+                            <td>
+                                @if($post->is_special)
+                                <span class="badge badge-warning">Special</span>
+                                @endif
+                            </td>
+                            <td>{{ $post->published_at ? $post->published_at->format('Y/m/d') : '' }}</td>
                             <td>
                                 @if($post->status==="approved")
                                 <span class="badge badge-success">{{ $post->status }}</span>

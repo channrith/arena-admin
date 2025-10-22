@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
+use App\Models\PostHighlight;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -13,17 +14,27 @@ class PostController extends Controller
      */
     public function index()
     {
-        $locale = app()->getLocale();
-
         $posts = Post::with([
             'author',
-            'translation' => function ($query) use ($locale) {
-                $query->where('language_code', $locale);
-            }
+            'currentTranslation'
         ])
             ->published()
             ->orderBy('published_at', 'desc')
             ->paginate(15);
+
+        return $posts;
+    }
+
+    public function getTopHighlight()
+    {
+        $highlights = PostHighlight::with(['post.currentTranslation'])
+            ->type('special')
+            ->active()
+            ->orderBy('priority')
+            ->take(5)
+            ->get();
+
+        return $highlights;
     }
 
     /**
@@ -39,22 +50,16 @@ class PostController extends Controller
      */
     public function show(string $id)
     {
-        //
-    }
+        $post = Post::with([
+            'author',
+            'currentTranslation'
+        ])
+            ->published()
+            ->findOrFail($id);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        $post->highlights; // all highlights
+        $post->activeHighlights; // active ones sorted by priority
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return $post;
     }
 }

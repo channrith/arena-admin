@@ -11,6 +11,7 @@ class Post extends Model
 
     protected $fillable = [
         'author_id',
+        'created_by',
         'status',
         'is_special',
         'is_promotion',
@@ -23,6 +24,11 @@ class Post extends Model
         'is_promotion' => 'boolean',
         'published_at' => 'datetime',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 
     public function author()
     {
@@ -40,6 +46,17 @@ class Post extends Model
         return $this->hasOne(PostTranslation::class)->where('language_code', $locale);
     }
 
+    public function highlights()
+    {
+        return $this->hasMany(PostHighlight::class);
+    }
+
+    public function activeHighlights()
+    {
+        return $this->hasMany(PostHighlight::class)
+            ->active()
+            ->orderBy('priority');
+    }
 
     public function scopePublished($query)
     {

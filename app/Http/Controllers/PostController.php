@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Helpers\SettingHelper;
 use App\Models\MediaFile;
 use App\Models\Post;
+use App\Models\PostHighlight;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -34,7 +36,7 @@ class PostController extends Controller
                     ->select('post_id', 'title', 'summary', 'feature_image', 'translator_name');
             }
         ])
-            ->select('id', 'author_id', 'source', 'status', 'published_at')
+            ->select('id', 'author_id', 'source', 'status', 'is_special', 'published_at')
             ->paginate(15);
 
         return view('posts.index', compact('posts'));
@@ -54,45 +56,76 @@ class PostController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'feature_image' => ['required', 'image', 'max:2048'],
+            'feature_image' => ['sometimes', 'image', 'max:2048'],
             'title' => ['required', 'string', 'max:255'],
             'summary' => ['required', 'string', 'max:500'],
             'content' => ['required', 'string'],
+            'source' => ['nullable', 'string'],
+            'translator_name' => ['nullable', 'string'],
+            'published_at' => ['nullable', 'string'],
         ]);
 
-        // Handle file upload
-        $file = $request->file('feature_image');
-
-        // Generate date-based folder
-        $folder = now()->format('Y/m/d');
+        $publishedAt = null;
+        if ($request->filled('published_at')) {
+            try {
+                $publishedAt = Carbon::createFromFormat('Y/m/d h:i A', $request->published_at);
+            } catch (\Exception $e) {
+                // If parsing fails, log it or handle gracefully
+                \Log::warning('Invalid published_at format', ['input' => $request->published_at]);
+            }
+        }
 
         $settings = SettingHelper::getDefaultSettings();
+        $cdnFilePath = null;
+        $mediaFileData = [];
+        if ($request->hasFile('feature_image')) {
+            // Handle file upload
+            $file = $request->file('feature_image');
 
-        // Send POST request to CDN API
-        $response = Http::attach(
-            'file',
-            file_get_contents($file->getRealPath()),
-            $file->getClientOriginalName()
-        )->withHeaders([
-            'Authorization' => $settings->cdn_api_token,
-            $settings->cdn_service_code_key => $settings->cdn_service_code_value,
-        ])->post($settings->upload_api_url . '/api/upload/single?folder=' . $folder);
+            // Generate date-based folder
+            $folder = now()->format('Y/m/d');
 
-        if (!$response->successful() || !$response->json('success')) {
-            \Log::error('CDN upload failed', ['response' => $response->body()]);
-            return back()->withErrors(['feature_image' => 'Failed to upload image to CDN.']);
+            // Send POST request to CDN API
+            $response = Http::attach(
+                'file',
+                file_get_contents($file->getRealPath()),
+                $file->getClientOriginalName()
+            )->withHeaders([
+                'Authorization' => $settings->cdn_api_token,
+                $settings->cdn_service_code_key => $settings->cdn_service_code_value,
+            ])->post($settings->upload_api_url . '/api/upload/single?folder=' . $folder);
+
+            if (!$response->successful() || !$response->json('success')) {
+                \Log::error('CDN upload failed', ['response' => $response->body()]);
+                return back()->withErrors(['feature_image' => 'Failed to upload image to CDN.']);
+            }
+
+            // $cdnUrl = $response->json('url');
+            $cdnFilePath = $response->json('filePath');
+
+            $mediaFileData = [
+                'original_name' => $file->getClientOriginalName(),
+                'file_name' => $response->json('filename'),
+                'url' => $cdnFilePath,
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'category' => 'post_gallery',
+                'owner_type' => Post::class,
+                'owner_id' => $post->id,
+                'uploader_id' => auth()->id(),
+            ];
         }
 
         $locale = app()->getLocale();
 
-        // $cdnUrl = $response->json('url');
-        $cdnFilePath = $response->json('filePath');
-
         // Save to database
         $post = Post::create([
             'author_id' => auth()->id(),
+            'created_by' => auth()->id(),
             'status' => $settings->is_enable_post_approval ? 'pending' : 'approved',
             'source' => $request->source,
+            'published_at' => $publishedAt,
+            'is_special' => (int)$request->is_special,
         ]);
 
         $post->translations()->create([
@@ -105,17 +138,18 @@ class PostController extends Controller
             'translator_name' => $request->translator_name,
         ]);
 
-        MediaFile::create([
-            'original_name' => $file->getClientOriginalName(),
-            'file_name' => $response->json('filename'),
-            'url' => $cdnFilePath,
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
-            'category' => 'post_gallery',
-            'owner_type' => Post::class,
-            'owner_id' => $post->id,
-            'uploader_id' => auth()->id(),
-        ]);
+        if ($mediaFileData) {
+            $mediaFileData['owner_id'] = $post->id;
+            MediaFile::create($mediaFileData);
+        }
+
+        if ($request->has('is_special')) {
+            $post->highlights()->create([
+                'type' => 'special',
+                'priority' => 1,
+                'created_by' => auth()->id(),
+            ]);
+        }
 
         return redirect()->route('posts.index')->with('success', 'Post created successfully!');
     }
@@ -134,9 +168,10 @@ class PostController extends Controller
                     ->select('post_id', 'title', 'summary', 'content', 'feature_image', 'translator_name');
             }
         ])
-            ->select('id', 'author_id', 'source', 'status', 'published_at')
+            ->select('id', 'author_id', 'source', 'status', 'is_special', 'published_at')
             ->findOrFail($id);
 
+            
         // For simplicity, merge translation attributes directly if available
         if ($post->currentTranslation) {
             $settings = SettingHelper::getDefaultSettings();
@@ -144,7 +179,7 @@ class PostController extends Controller
             $post->title = $post->currentTranslation->title;
             $post->summary = $post->currentTranslation->summary;
             $post->content = $post->currentTranslation->content ?? '';
-            $post->feature_image = $settings->cdn_url . $post->currentTranslation->feature_image;
+            $post->feature_image = $post->currentTranslation->feature_image ? $settings->cdn_url . $post->currentTranslation->feature_image : '';
             $post->translator_name = $post->currentTranslation->translator_name;
         }
 
@@ -159,11 +194,24 @@ class PostController extends Controller
         $post = Post::with('translations')->findOrFail($id);
 
         $validated = $request->validate([
-            'feature_image' => ['nullable', 'image', 'max:2048'],
+            'feature_image' => ['sometimes', 'image', 'max:2048'],
             'title' => ['required', 'string', 'max:255'],
             'summary' => ['required', 'string', 'max:500'],
             'content' => ['required', 'string'],
+            'source' => ['nullable', 'string'],
+            'translator_name' => ['nullable', 'string'],
+            'published_at' => ['nullable', 'string'],
         ]);
+
+        $publishedAt = null;
+        if ($request->filled('published_at')) {
+            try {
+                $publishedAt = Carbon::createFromFormat('Y/m/d h:i A', $request->published_at);
+            } catch (\Exception $e) {
+                // If parsing fails, log it or handle gracefully
+                \Log::warning('Invalid published_at format', ['input' => $request->published_at]);
+            }
+        }
 
         $settings = SettingHelper::getDefaultSettings();
         $cdnFilePath = $post->currentTranslation->feature_image ?? null;
@@ -205,8 +253,10 @@ class PostController extends Controller
 
         // Update main post fields
         $post->update([
-            'source' => $request->source,
             'status' => $settings->is_enable_post_approval ? 'pending' : 'approved',
+            'source' => $request->source,
+            'published_at' => $publishedAt,
+            'is_special' => (int)$request->is_special,
         ]);
 
         // Determine current locale translation
@@ -235,6 +285,24 @@ class PostController extends Controller
                 'slug' => \Str::slug($validated['title']),
                 'translator_name' => $request->translator_name,
             ]);
+        }
+
+        if ($request->has('is_special')) {
+            PostHighlight::updateOrCreate(
+                [
+                    'post_id' => $post->id,
+                    'type' => 'special',
+                ],
+                [
+                    'priority' => 1,
+                    'created_by' => auth()->id(),
+                ]
+            );
+        } else {
+            // Remove highlight if unchecked
+            PostHighlight::where('post_id', $post->id)
+                ->where('type', 'special')
+                ->delete();
         }
 
         return redirect()->route('posts.index')->with('success', 'Post updated successfully!');
