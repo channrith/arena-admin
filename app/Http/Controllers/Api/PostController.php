@@ -12,7 +12,7 @@ class PostController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function getAllPosts()
     {
         $posts = Post::with([
             'author',
@@ -38,17 +38,9 @@ class PostController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function getPostDetailById(string $id)
     {
         $post = Post::with([
             'author',
@@ -57,8 +49,8 @@ class PostController extends Controller
             ->published()
             ->findOrFail($id);
 
-        $post->highlights; // all highlights
-        $post->activeHighlights; // active ones sorted by priority
+        //$post->highlights; // all highlights
+        //$post->activeHighlights; // active ones sorted by priority
 
         return $post;
     }
