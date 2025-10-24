@@ -152,10 +152,10 @@
                         </div>
 
                         {{-- Show current image preview --}}
-                        @if($post->feature_image)
+                        @if($post->currentTranslation->feature_image_url)
                         <div class="mt-3">
                             <p>Current Image:</p>
-                            <img src="{{ $post->feature_image }}"
+                            <img src="{{ $post->currentTranslation->feature_image_url }}"
                                 alt="Feature Image"
                                 class="img-fluid rounded"
                                 style="max-height: 200px;">

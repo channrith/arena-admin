@@ -19,16 +19,18 @@ class PostTranslation extends Model
         'translator_name'
     ];
 
-    public function getFeatureImageAttribute($value)
+    protected $appends = ['feature_image_url']; // include in JSON output
+
+    public function getFeatureImageUrlAttribute()
     {
         $settings = SettingHelper::getDefaultSettings();
 
-        if (!$value) {
+        if (!$this->feature_image) {
             return null;
         }
 
         // Ensure no double slashes
-        return rtrim($settings->cdn_url ?? $settings->upload_api_url, '/') . '/' . ltrim($value, '/');
+        return rtrim($settings->cdn_url ?? $settings->upload_api_url, '/') . '/' . ltrim($this->feature_image, '/');
     }
 
     public function post()
