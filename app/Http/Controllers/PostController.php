@@ -180,7 +180,7 @@ class PostController extends Controller
             $post->title = $post->currentTranslation->title;
             $post->summary = $post->currentTranslation->summary;
             $post->content = $post->currentTranslation->content ?? '';
-            $post->feature_image = $post->currentTranslation->feature_image ? $settings->cdn_url . $post->currentTranslation->feature_image : '';
+            $post->feature_image = $post->currentTranslation->feature_image ?? '';
             $post->translator_name = $post->currentTranslation->translator_name;
         }
 
