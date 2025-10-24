@@ -78,6 +78,19 @@ class PostController extends Controller
         $settings = SettingHelper::getDefaultSettings();
         $cdnFilePath = null;
         $mediaFileData = [];
+
+        $locale = app()->getLocale();
+
+        // Save to database
+        $post = Post::create([
+            'author_id' => auth()->id(),
+            'created_by' => auth()->id(),
+            'status' => $settings->is_enable_post_approval ? 'pending' : 'approved',
+            'source' => $request->source,
+            'published_at' => $publishedAt,
+            'is_special' => (int)$request->is_special,
+        ]);
+
         if ($request->hasFile('feature_image')) {
             // Handle file upload
             $file = $request->file('feature_image');
@@ -115,18 +128,6 @@ class PostController extends Controller
                 'uploader_id' => auth()->id(),
             ];
         }
-
-        $locale = app()->getLocale();
-
-        // Save to database
-        $post = Post::create([
-            'author_id' => auth()->id(),
-            'created_by' => auth()->id(),
-            'status' => $settings->is_enable_post_approval ? 'pending' : 'approved',
-            'source' => $request->source,
-            'published_at' => $publishedAt,
-            'is_special' => (int)$request->is_special,
-        ]);
 
         $post->translations()->create([
             'language_code' => $locale,
@@ -171,7 +172,7 @@ class PostController extends Controller
             ->select('id', 'author_id', 'source', 'status', 'is_special', 'published_at')
             ->findOrFail($id);
 
-            
+
         // For simplicity, merge translation attributes directly if available
         if ($post->currentTranslation) {
             $settings = SettingHelper::getDefaultSettings();
