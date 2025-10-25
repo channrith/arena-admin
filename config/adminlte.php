@@ -334,6 +334,11 @@ return [
                 ],
             ],
         ],
+        [
+            'text' => 'car_management',
+            'url' => 'car-managements',
+            'icon' => 'fas fa-fw fa-car',
+        ],
         ['header' => 'account_settings'],
         [
             'text' => 'profile',
