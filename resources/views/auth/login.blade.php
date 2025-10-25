@@ -22,7 +22,7 @@
         <div class="login-logo">
             <a href="{{ url('/') }}">
                 <img src="{{ asset('vendor/adminlte/dist/img/AdminLTELogo.png') }}" alt="Admin Logo" height="50">
-                <b>Admin</b>LTE
+                <b>ERP</b>System
             </a>
         </div>
 
