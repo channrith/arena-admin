@@ -90,8 +90,10 @@
                 <div class="card-body">
                     <div class="form-group">
                         <label>Status</label>
-                        @if($post->status==="approved")
-                        <span class="badge badge-success">{{ $post->status }}</span>
+                        @if($post->status==="approved" && $post->display_status==="Published")
+                        <span class="badge badge-success">{{ $post->display_status  }}</span>
+                        @elseif($post->status==="approved" && $post->display_status==="Scheduled")
+                        <span class="badge badge-primary">{{ $post->display_status  }}</span>
                         @elseif($post->status==="pending")
                         <span class="badge badge-info">{{ $post->status }}</span>
                         @elseif($post->status==="rejected")

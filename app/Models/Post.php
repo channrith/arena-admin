@@ -69,4 +69,19 @@ class Post extends Model
     {
         return $query->where('author_id', $authorId);
     }
+
+    public function getDisplayStatusAttribute()
+    {
+        if ($this->status === 'approved') {
+            if ($this->published_at && $this->published_at->isFuture()) {
+                return 'Scheduled';
+            }
+
+            if ($this->published_at && $this->published_at->isPast()) {
+                return 'Published';
+            }
+        }
+
+        return ucfirst($this->status);
+    }
 }

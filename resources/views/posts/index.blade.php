@@ -48,13 +48,15 @@
                             <td>{{ $post->currentTranslation->title }}</td>
                             <td>
                                 @if($post->is_special)
-                                <span class="badge badge-warning">Special</span>
+                                <span class="badge badge-danger">Special</span>
                                 @endif
                             </td>
                             <td>{{ $post->published_at ? $post->published_at->format('Y/m/d') : '' }}</td>
                             <td>
-                                @if($post->status==="approved")
-                                <span class="badge badge-success">{{ $post->status }}</span>
+                                @if($post->status==="approved" && $post->display_status==="Published")
+                                <span class="badge badge-success">{{ $post->display_status  }}</span>
+                                @elseif($post->status==="approved" && $post->display_status==="Scheduled")
+                                <span class="badge badge-primary">{{ $post->display_status  }}</span>
                                 @elseif($post->status==="pending")
                                 <span class="badge badge-info">{{ $post->status }}</span>
                                 @elseif($post->status==="rejected")
@@ -135,13 +137,11 @@
 @push('css')
 {{-- Add here extra stylesheets --}}
 {{-- <link rel="stylesheet" href="/css/admin_custom.css"> --}}
-<link rel="stylesheet" href="/plugins/toastr/toastr.min.css">
 @endpush
 
 {{-- Push extra scripts --}}
 
 @push('js')
-<script src="/plugins/toastr/toastr.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const deleteModal = $('#modal-confirm-delete');
@@ -157,21 +157,5 @@
             deleteForm.action = `/posts/${postId}`; // RESTful route
         });
     });
-
-    @if(session('success'))
-    toastr.success("{{ session('success') }}");
-    @endif
-
-    @if(session('error'))
-    toastr.error("{{ session('error') }}");
-    @endif
-
-    @if(session('warning'))
-    toastr.warning("{{ session('warning') }}");
-    @endif
-
-    @if(session('info'))
-    toastr.info("{{ session('info') }}");
-    @endif
 </script>
 @endpush

@@ -18,12 +18,12 @@ class ProfileController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . auth()->id(),
+            // 'email' => 'required|email|unique:users,email,' . auth()->id(),
         ]);
 
         auth()->user()->update([
             'name' => $request->name,
-            'email' => $request->email,
+            // 'email' => $request->email,
         ]);
 
         return back()->with('success', 'Profile updated successfully!');
