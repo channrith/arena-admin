@@ -54,4 +54,25 @@ class PostController extends Controller
 
         return $post;
     }
+
+    public function listForSitemap()
+    {
+        // Only load fields needed for sitemap (avoid heavy relationships)
+        $posts = Post::select('id', 'updated_at')
+            ->with([
+                'currentTranslation:id,post_id,slug'
+            ])
+            ->published()
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        // Transform for cleaner output
+        return $posts->map(function ($post) {
+            return [
+                'id' => $post->id,
+                'slug' => $post->currentTranslation?->slug,
+                'updated_at' => $post->updated_at->toIso8601String(),
+            ];
+        });
+    }
 }
