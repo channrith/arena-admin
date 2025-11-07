@@ -70,10 +70,10 @@ class CarModelController extends Controller
                 'image' => rtrim($this->settings->cdn_url ?? $this->settings->upload_api_url, '/') . '/' . ltrim($vehicle->thumbnail_image ?? $vehicle->image_url, '/'),
                 'options' => $vehicle->specCategories->map(function ($category) {
                     return [
-                        'category' => $category->name,
+                        'category' => trim($category->name . ' ' . ($category->name_kh ?? '')),
                         'specs' => $category->specs->map(function ($spec) {
                             return [
-                                'label' => $spec->label,
+                                'label' => trim($spec->label . ' ' . ($spec->label_kh ?? '')),
                                 'value' => $spec->value,
                             ];
                         }),
