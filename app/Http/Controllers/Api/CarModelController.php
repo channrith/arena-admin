@@ -67,7 +67,7 @@ class CarModelController extends Controller
             return [
                 'id' => $vehicle->id,
                 'name' => $vehicle->name,
-                'image' => $vehicle->image_url ?? '/images/default-car.jpg',
+                'image' => rtrim($this->settings->cdn_url ?? $this->settings->upload_api_url, '/') . '/' . ltrim($vehicle->thumbnail_image ?? $vehicle->image_url, '/'),
                 'options' => $vehicle->specCategories->map(function ($category) {
                     return [
                         'category' => $category->name,
