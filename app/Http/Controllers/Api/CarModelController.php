@@ -65,7 +65,8 @@ class CarModelController extends Controller
         // Transform to expected output format
         $results = $vehicles->map(function ($vehicle) {
             return [
-                'name' => $vehicle->maker->name . ' ' . $vehicle->name,
+                'id' => $vehicle->id,
+                'name' => $vehicle->name,
                 'image' => $vehicle->image_url ?? '/images/default-car.jpg',
                 'options' => $vehicle->specCategories->map(function ($category) {
                     return [

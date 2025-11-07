@@ -27,7 +27,14 @@ class PostController extends Controller
 
     public function getTopHighlight()
     {
-        $highlights = PostHighlight::with(['post.currentTranslation'])
+        $highlights = PostHighlight::with([
+            'post' => function ($query) {
+                $query->select('id', 'author_id', 'source', 'status', 'published_at');
+            },
+            'post.currentTranslation' => function ($query) {
+                $query->select('post_id', 'language_code', 'title', 'feature_image');
+            },
+        ])
             ->type('special')
             ->active()
             ->orderBy('priority')
