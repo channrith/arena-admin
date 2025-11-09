@@ -25,7 +25,7 @@
                 <!-- Card Body -->
                 <div class="card-body">
                     <div class="form-group">
-                        <label for="title">Title</label>
+                        <label for="title">Title <span class="text-danger">*</span></label>
                         <input
                             type="text"
                             name="title"
@@ -39,7 +39,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="summary">Summary</label>
+                        <label for="summary">Summary <span class="text-danger">*</span></label>
                         <textarea
                             name="summary"
                             id="summary"
@@ -52,7 +52,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="content">Content</label>
+                        <label for="content">Content <span class="text-danger">*</span></label>
                         <textarea
                             id="summernote"
                             name="content"
@@ -122,6 +122,7 @@
                 <!-- Card Body -->
                 <div class="card-body">
                     <div class="form-group">
+                        <label for="image_url">Upload Image (1920x1080px)</label>
                         <div class="custom-file">
                             <input
                                 type="file"
@@ -133,6 +134,10 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                    </div>
+
+                    <div class="mt-3 text-center">
+                        <img id="imagePreview" src="#" alt="Preview" class="img-fluid rounded d-none" style="max-height: 120px;">
                     </div>
                 </div>
             </div>
@@ -200,6 +205,15 @@
     document.addEventListener('DOMContentLoaded', function() {
         const fileInput = document.querySelector('#featureImage');
         fileInput.addEventListener('change', function(e) {
+            const [file] = e.target.files;
+            const preview = document.getElementById('imagePreview');
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('d-none');
+            } else {
+                preview.classList.add('d-none');
+            }
+
             const fileName = e.target.files[0] ? e.target.files[0].name : 'Choose file';
             e.target.nextElementSibling.textContent = fileName;
         });

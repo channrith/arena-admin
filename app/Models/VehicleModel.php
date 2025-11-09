@@ -12,6 +12,8 @@ class VehicleModel extends Model
         'name',
         'slug',
         'is_global_model',
+        'is_local_model',
+        'year_of_production',
         'image_url',
         'thumbnail_image',
     ];
@@ -40,6 +42,29 @@ class VehicleModel extends Model
 
         // Ensure no double slashes
         return rtrim($settings->cdn_url ?? $settings->upload_api_url, '/') . '/' . ltrim($this->image_url, '/');
+    }
+
+    public static function generateUniqueSlug(string $name, $ignoreId = null)
+    {
+        $baseSlug = \Str::slug($name);
+        $slug = $baseSlug;
+        $counter = 1;
+
+        $query = static::where('slug', $slug);
+        if ($ignoreId) {
+            $query->where('id', '!=', $ignoreId);
+        }
+
+        while ($query->exists()) {
+            $slug = "{$baseSlug}-{$counter}";
+            $counter++;
+            $query = static::where('slug', $slug);
+            if ($ignoreId) {
+                $query->where('id', '!=', $ignoreId);
+            }
+        }
+
+        return $slug;
     }
 
     public function maker()

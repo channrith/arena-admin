@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class VehicleMaker extends Model
 {
     protected $fillable = [
+        'service_id',
         'sequence',
         'name',
         'slug',

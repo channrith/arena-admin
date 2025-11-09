@@ -197,7 +197,7 @@ return [
     'classes_content_header' => '',
     'classes_content' => '',
     'classes_sidebar' => 'sidebar-dark-primary elevation-4',
-    'classes_sidebar_nav' => '',
+    'classes_sidebar_nav' => 'nav-child-indent nav-compact',
     'classes_topnav' => 'navbar-white navbar-light',
     'classes_topnav_nav' => 'navbar-expand',
     'classes_topnav_container' => 'container',
@@ -325,19 +325,48 @@ return [
             'icon' => 'fas fa-fw fa-file',
             'submenu' => [
                 [
-                    'text' => 'all',
+                    'text' => 'posts.all',
                     'url' => 'posts',
                 ],
                 [
-                    'text' => 'add',
+                    'text' => 'posts.add',
                     'url' => 'posts/create',
                 ],
             ],
         ],
         [
-            'text' => 'car_management',
-            'url' => 'car-managements',
+            'text' => 'cars',
             'icon' => 'fas fa-fw fa-car',
+            'submenu' => [
+                [
+                    'text' => 'cars.makers',
+                    'icon' => 'fas fa-fw fa-industry',
+                    'submenu' => [
+                        [
+                            'text' => 'cars.makers.all',
+                            'url' => 'car-makers',
+                        ],
+                        [
+                            'text' => 'cars.makers.add',
+                            'url' => 'car-makers/create',
+                        ],
+                    ],
+                ],
+                [
+                    'text' => 'cars.models',
+                    'icon' => 'fas fa-fw fa-flag',
+                    'submenu' => [
+                        [
+                            'text' => 'cars.models.all',
+                            'url' => 'car-models',
+                        ],
+                        [
+                            'text' => 'cars.models.add',
+                            'url' => 'car-models/create',
+                        ],
+                    ],
+                ],
+            ],
         ],
         ['header' => 'account_settings'],
         [

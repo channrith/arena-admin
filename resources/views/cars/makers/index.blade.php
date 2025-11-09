@@ -2,8 +2,8 @@
 
 {{-- Customize layout sections --}}
 
-@section('subtitle', 'Posts')
-@section('content_header_title', 'Posts')
+@section('subtitle', 'Car Makers')
+@section('content_header_title', 'Car Makers')
 @section('content_header_subtitle', 'All')
 
 {{-- Content body: main page content --}}
@@ -13,7 +13,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Responsive Hover Table</h3>
+                <h3 class="card-title">Car Makers</h3>
 
                 <div class="card-tools">
                     <div class="input-group input-group-sm" style="width: 150px;">
@@ -33,50 +33,30 @@
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>Title</th>
-                            <th></th>
-                            <th>Published Date</th>
-                            <th>Status</th>
-                            <th>Author</th>
+                            <th>Name</th>
+                            <th>Logo</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($posts as $key => $post)
+                        @foreach ($vehicles as $key => $vehicle)
                         <tr>
                             <td>{{$key + 1}}</td>
-                            <td>{{ $post->currentTranslation->title }}</td>
-                            <td>
-                                @if($post->is_special)
-                                <span class="badge badge-danger">Special</span>
-                                @endif
-                            </td>
-                            <td>{{ $post->published_at ? $post->published_at->format('Y/m/d') : '' }}</td>
-                            <td>
-                                @if($post->status==="approved" && $post->display_status==="Published")
-                                <span class="badge badge-success">{{ $post->display_status  }}</span>
-                                @elseif($post->status==="approved" && $post->display_status==="Scheduled")
-                                <span class="badge badge-primary">{{ $post->display_status  }}</span>
-                                @elseif($post->status==="pending")
-                                <span class="badge badge-info">{{ $post->status }}</span>
-                                @elseif($post->status==="rejected")
-                                <span class="badge badge-danger">{{ $post->status }}</span>
-                                @else
-                                <span class="badge badge-warning">{{ $post->status }}</span>
-                                @endif
-
-                            </td>
-                            <td>{{ $post->author->name }}</td>
+                            <td>{{ $vehicle->name }}</td>
+                            <td><img src="{{ $vehicle->image_url }}"
+                                    alt="Feature Image"
+                                    class="img-fluid rounded"
+                                    style="max-height: 50px;"></td>
                             <td class="project-actions text-right">
-                                <a class="btn btn-primary btn-sm" href="{{ route('posts.edit', $post->id) }}">
+                                <a class="btn btn-primary btn-sm" href="{{ route('cars.makers.edit', $vehicle->id) }}">
                                     <i class="fas fa-pencil-alt"></i>
                                     Edit
                                 </a>
                                 <button
                                     type="button"
                                     class="btn btn-danger btn-sm btn-delete"
-                                    data-id="{{ $post->id }}"
-                                    data-title="{{ $post->currentTranslation->title }}"
+                                    data-id="{{ $vehicle->id }}"
+                                    data-title="{{ $vehicle->name }}"
                                     data-toggle="modal"
                                     data-target="#modal-confirm-delete">
                                     <i class="fas fa-trash"></i>
@@ -105,8 +85,8 @@
                                 </div>
 
                                 <div class="modal-body">
-                                    <p>Are you sure you want to delete this post?</p>
-                                    <p><strong id="postTitle"></strong></p>
+                                    <p>Are you sure you want to delete this item?</p>
+                                    <p><strong id="modalTitle"></strong></p>
                                 </div>
 
                                 <div class="modal-footer">
@@ -124,7 +104,7 @@
             </div>
             <!-- /.card-body -->
             <div class="card-footer clearfix">
-                {{ $posts->links('vendor.pagination.custom') }}
+                {{ $vehicles->links('vendor.pagination.custom') }}
             </div>
         </div>
         <!-- /.card -->
@@ -146,15 +126,15 @@
     document.addEventListener('DOMContentLoaded', function() {
         const deleteModal = $('#modal-confirm-delete');
         const deleteForm = document.getElementById('deleteForm');
-        const postTitle = document.getElementById('postTitle');
+        const modalTitle = document.getElementById('modalTitle');
 
         $('.btn-delete').on('click', function() {
-            const postId = $(this).data('id');
+            const itemId = $(this).data('id');
             const title = $(this).data('title');
 
             // Update modal text and form action
-            postTitle.textContent = title ? `Post: "${title}"` : '';
-            deleteForm.action = `/posts/${postId}`; // RESTful route
+            modalTitle.textContent = title ? `Maker: "${title}"` : '';
+            deleteForm.action = `/car-makers/${itemId}`; // RESTful route
         });
     });
 </script>

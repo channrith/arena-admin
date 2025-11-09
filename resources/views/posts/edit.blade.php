@@ -24,7 +24,7 @@
                 <!-- Card Body -->
                 <div class="card-body">
                     <div class="form-group">
-                        <label for="title">Title</label>
+                        <label for="title">Title <span class="text-danger">*</span></label>
                         <input
                             type="text"
                             name="title"
@@ -39,7 +39,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="summary">Summary</label>
+                        <label for="summary">Summary <span class="text-danger">*</span></label>
                         <textarea
                             name="summary"
                             id="summary"
@@ -53,7 +53,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="content">Content</label>
+                        <label for="content">Content <span class="text-danger">*</span></label>
                         <textarea
                             id="summernote"
                             name="content"
