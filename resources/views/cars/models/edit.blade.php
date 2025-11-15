@@ -190,7 +190,7 @@
                         </div>
 
                         {{-- Show current image preview --}}
-                        @if($vehicle->image_url)
+                        @if($vehicle->feature_image_url)
                         <div class="mt-3">
                             <p>Current Image:</p>
                             <img src="{{ $vehicle->feature_image_url }}"
