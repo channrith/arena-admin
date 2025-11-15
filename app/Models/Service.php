@@ -15,4 +15,14 @@ class Service extends Model
     {
         return $this->hasMany(VehicleMaker::class, 'service_id');
     }
+
+    public function posters()
+    {
+        return $this->hasMany(Poster::class, 'service_id');
+    }
+
+    public function posterCategories()
+    {
+        return $this->hasMany(PosterCategory::class, 'service_id');
+    }
 }

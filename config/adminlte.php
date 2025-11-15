@@ -368,6 +368,20 @@ return [
                 ],
             ],
         ],
+        [
+            'text' => 'marketings',
+            'icon' => 'fas fa-fw fa-chart-pie',
+            'submenu' => [
+                [
+                    'text' => 'posters.all',
+                    'url' => 'posters',
+                ],
+                [
+                    'text' => 'posters.add',
+                    'url' => 'posters/create',
+                ],
+            ],
+        ],
         ['header' => 'account_settings'],
         [
             'text' => 'profile',
