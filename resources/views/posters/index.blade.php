@@ -43,7 +43,7 @@
                         <tr>
                             <td>{{$key + 1}}</td>
                             <td>{{ $poster->title }}</td>
-                            <td><img src="{{ $poster->image_url }}"
+                            <td><img src="{{ $poster->feature_image_url }}"
                                     alt="Feature Image"
                                     class="img-fluid rounded"
                                     style="max-height: 50px;"></td>
