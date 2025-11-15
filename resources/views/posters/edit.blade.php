@@ -80,8 +80,7 @@
                             id="posterUrl"
                             class="form-control @error('url') is-invalid @enderror"
                             placeholder="Enter poster url ..."
-                            value="{{ old('url', $poster->url) }}"
-                            required>
+                            value="{{ old('url', $poster->url) }}">
                         @error('url')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
