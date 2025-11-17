@@ -11,6 +11,16 @@ use Illuminate\Support\Facades\Http;
 
 class MakerController extends Controller
 {
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index()
     {
         $locale = app()->getLocale();
@@ -31,9 +41,12 @@ class MakerController extends Controller
             'logo_url' => ['sometimes', 'image', 'max:2048'],
             'name' => ['required', 'string', 'max:255'],
             'sequence' => ['required', 'integer', 'min:0'],
+            'description' => ['nullable', 'string', 'max:255'],
+            'banner_url' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $settings = SettingHelper::getDefaultSettings();
+        $logoCdnFilePath = null;
         $cdnFilePath = null;
         $service = Service::where('code', 'acauto')->first();
 
@@ -53,7 +66,30 @@ class MakerController extends Controller
 
             if (!$response->successful() || !$response->json('success')) {
                 \Log::error('CDN upload failed', ['response' => $response->body()]);
-                return back()->withErrors(['logo_url' => 'Failed to upload image to CDN.']);
+                return back()->withErrors(['logo_url' => 'Failed to upload logo to CDN.']);
+            }
+
+            // $cdnUrl = $response->json('url');
+            $logoCdnFilePath = $response->json('filePath');
+        }
+
+        if ($request->hasFile('banner_url')) {
+            $file = $request->file('banner_url');
+            $folder = 'acauto/maker';
+
+            // Send POST request to CDN API
+            $response = Http::attach(
+                'file',
+                file_get_contents($file->getRealPath()),
+                $file->getClientOriginalName()
+            )->withHeaders([
+                'Authorization' => $settings->cdn_api_token,
+                $settings->cdn_service_code_key => $settings->cdn_service_code_value,
+            ])->post($settings->upload_api_url . '/api/upload/single?folder=' . $folder);
+
+            if (!$response->successful() || !$response->json('success')) {
+                \Log::error('CDN upload failed', ['response' => $response->body()]);
+                return back()->withErrors(['banner_url' => 'Failed to upload image to CDN.']);
             }
 
             // $cdnUrl = $response->json('url');
@@ -66,7 +102,9 @@ class MakerController extends Controller
             'slug' => \Str::slug($validated['name']),
             'name' => $validated['name'],
             'sequence' => $validated['sequence'],
-            'logo_url' => $cdnFilePath,
+            'logo_url' => $logoCdnFilePath,
+            'banner_url' => $cdnFilePath,
+            'description' => $validated['description'],
         ]);
 
         return redirect()->route('cars.makers.index')->with('success', 'Item created successfully!');
@@ -87,10 +125,13 @@ class MakerController extends Controller
             'logo_url' => ['sometimes', 'image', 'max:2048'],
             'name' => ['required', 'string', 'max:255'],
             'sequence' => ['required', 'integer', 'min:0'],
+            'description' => ['nullable', 'string', 'max:255'],
+            'banner_url' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $settings = SettingHelper::getDefaultSettings();
-        $cdnFilePath = $vehicleMaker->logo_url ?? null;
+        $logoCdnFilePath = $vehicleMaker->logo_url ?? null;
+        $cdnFilePath = $vehicleMaker->banner_url ?? null;
 
         // Handle new image upload if provided
         if ($request->hasFile('logo_url')) {
@@ -108,7 +149,28 @@ class MakerController extends Controller
 
             if (!$response->successful() || !$response->json('success')) {
                 \Log::error('CDN upload failed during update', ['response' => $response->body()]);
-                return back()->withErrors(['logo_url' => 'Failed to upload image to CDN.']);
+                return back()->withErrors(['logo_url' => 'Failed to upload logo to CDN.']);
+            }
+
+            $logoCdnFilePath = $response->json('filePath');
+        }
+
+        if ($request->hasFile('banner_url')) {
+            $file = $request->file('banner_url');
+            $folder = 'acauto/maker';
+
+            $response = Http::attach(
+                'file',
+                file_get_contents($file->getRealPath()),
+                $file->getClientOriginalName()
+            )->withHeaders([
+                'Authorization' => $settings->cdn_api_token,
+                $settings->cdn_service_code_key => $settings->cdn_service_code_value,
+            ])->post($settings->upload_api_url . '/api/upload/single?folder=' . $folder);
+
+            if (!$response->successful() || !$response->json('success')) {
+                \Log::error('CDN upload failed during update', ['response' => $response->body()]);
+                return back()->withErrors(['banner_url' => 'Failed to upload image to CDN.']);
             }
 
             $cdnFilePath = $response->json('filePath');
@@ -118,7 +180,9 @@ class MakerController extends Controller
             'slug' => \Str::slug($validated['name']),
             'name' => $validated['name'],
             'sequence' => $validated['sequence'],
-            'logo_url' => $cdnFilePath,
+            'logo_url' => $logoCdnFilePath,
+            'banner_url' => $cdnFilePath,
+            'description' => $validated['description'],
         ]);
 
         return redirect()->route('cars.makers.index')->with('success', 'Item updated successfully!');

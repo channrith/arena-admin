@@ -2,7 +2,7 @@
 
 {{-- Customize layout sections --}}
 
-@section('subtitle', 'Car Makers')
+@section('subtitle', 'Manufacturers')
 @section('content_header_title', 'Car Makers')
 @section('content_header_subtitle', 'Add New')
 
@@ -18,7 +18,7 @@
             <div class="card card-outline card-primary">
                 <div class="card-header">
                     <h3 class="card-title">
-                        Add Car Makers
+                        Manufacturer information
                     </h3>
                 </div>
 
@@ -57,6 +57,50 @@
                             value="{{ old('sequence') }}"
                             required>
                         @error('sequence')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-outline card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        Banner
+                    </h3>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="form-group">
+                        <div class="custom-file">
+                            <input
+                                type="file"
+                                class="custom-file-input @error('banner_url') is-invalid @enderror"
+                                id="bannerImage"
+                                name="banner_url">
+                            <label class="custom-file-label" for="bannerImage">
+                                Choose file
+                            </label>
+                            @error('banner_url')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mt-3 text-center">
+                            <img id="bannerPreview" src="#" alt="Banner preview" class="img-fluid rounded d-none">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea
+                            name="description"
+                            id="description"
+                            rows="2"
+                            class="form-control @error('description') is-invalid @enderror"
+                            placeholder="Enter banner description...">{{ old('description') }}</textarea>
+                        @error('description')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -123,6 +167,21 @@
         fileInput.addEventListener('change', function(e) {
             const [file] = e.target.files;
             const preview = document.getElementById('imagePreview');
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('d-none');
+            } else {
+                preview.classList.add('d-none');
+            }
+
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'Choose file';
+            e.target.nextElementSibling.textContent = fileName;
+        });
+
+        const bannerInput = document.querySelector('#bannerImage');
+        bannerInput.addEventListener('change', function(e) {
+            const [file] = e.target.files;
+            const preview = document.getElementById('bannerPreview');
             if (file) {
                 preview.src = URL.createObjectURL(file);
                 preview.classList.remove('d-none');

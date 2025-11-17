@@ -10,7 +10,7 @@ return [
     'posters.all' => 'All Posters',
     'posters.add' => 'Add New Poster',
     'cars' => 'Car Management',
-    'cars.makers' => 'Makers',
+    'cars.makers' => 'Manufacturers',
     'cars.makers.all' => 'All Makers',
     'cars.makers.add' => 'Add New Maker',
     'cars.models' => 'Models',

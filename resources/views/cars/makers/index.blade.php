@@ -2,7 +2,7 @@
 
 {{-- Customize layout sections --}}
 
-@section('subtitle', 'Car Makers')
+@section('subtitle', 'Manufacturers')
 @section('content_header_title', 'Car Makers')
 @section('content_header_subtitle', 'All')
 
@@ -13,7 +13,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Car Makers</h3>
+                <h3 class="card-title">List of manufacturer</h3>
 
                 <div class="card-tools">
                     <div class="input-group input-group-sm" style="width: 150px;">

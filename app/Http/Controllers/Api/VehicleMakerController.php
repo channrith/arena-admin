@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Helpers\SettingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\VehicleMaker;
-use App\Models\VehicleModel;
 use Illuminate\Http\Request;
 
 class VehicleMakerController extends Controller
@@ -15,7 +13,15 @@ class VehicleMakerController extends Controller
         $limit = $request->query('limit');
 
         $query = VehicleMaker::query()
-            ->select('id', 'name', 'slug', 'logo_url', 'sequence')
+            ->select(
+                'id',
+                'name',
+                'slug',
+                'logo_url',
+                'banner_url',
+                'description',
+                'sequence'
+            )
             ->orderBy('sequence', 'asc')
             ->orderBy('name', 'asc');
 
@@ -29,5 +35,28 @@ class VehicleMakerController extends Controller
             'data' => $makers,
             'total' => $makers->count(),
         ]);
+    }
+
+    public function showBySlug($slug)
+    {
+        $maker = VehicleMaker::select(
+            'id',
+            'name',
+            'slug',
+            'logo_url',
+            'banner_url',
+            'description',
+            'sequence'
+        )
+            ->where('slug', $slug)
+            ->first();
+
+        if (!$maker) {
+            return response()->json([
+                'message' => 'Vehicle maker not found.'
+            ], 404);
+        }
+
+        return response()->json($maker);
     }
 }

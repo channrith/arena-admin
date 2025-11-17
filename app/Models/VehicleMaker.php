@@ -13,9 +13,11 @@ class VehicleMaker extends Model
         'name',
         'slug',
         'logo_url',
+        'banner_url',
+        'description',
     ];
 
-    protected $appends = ['image_url']; // include in JSON output
+    protected $appends = ['image_url', 'banner_image_url']; // include in JSON output
 
 
     public function getImageUrlAttribute()
@@ -28,6 +30,18 @@ class VehicleMaker extends Model
 
         // Ensure no double slashes
         return rtrim($settings->cdn_url ?? $settings->upload_api_url, '/') . '/' . ltrim($this->logo_url, '/');
+    }
+
+    public function getBannerImageUrlAttribute()
+    {
+        $settings = SettingHelper::getDefaultSettings();
+
+        if (!$this->banner_url) {
+            return null;
+        }
+
+        // Ensure no double slashes
+        return rtrim($settings->cdn_url ?? $settings->upload_api_url, '/') . '/' . ltrim($this->banner_url, '/');
     }
 
     public function models()

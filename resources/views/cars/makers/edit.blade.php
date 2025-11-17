@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 {{-- Customize layout sections --}}
-@section('subtitle', 'Cars Makers')
+@section('subtitle', 'Manufacturers')
 @section('content_header_title', 'Car Makers')
 @section('content_header_subtitle', 'Edit')
 
@@ -17,7 +17,7 @@
             <div class="card card-outline card-primary">
                 <div class="card-header">
                     <h3 class="card-title">
-                        Edit Car Maker
+                        Manufacturer information
                     </h3>
                 </div>
 
@@ -56,6 +56,55 @@
                             value="{{ old('sequence', $vehicleMaker->sequence) }}"
                             required>
                         @error('sequence')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-outline card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        Banner
+                    </h3>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="form-group">
+                        <div class="custom-file">
+                            <input
+                                type="file"
+                                class="custom-file-input @error('banner_url') is-invalid @enderror"
+                                id="bannerImage"
+                                name="banner_url">
+                            <label class="custom-file-label" for="bannerImage">
+                                Choose file
+                            </label>
+                            @error('banner_url')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        @if($vehicleMaker->banner_image_url)
+                        <div class="mt-3">
+                            <p>Current Image:</p>
+                            <img src="{{ $vehicleMaker->banner_image_url }}"
+                                alt="Feature Image"
+                                class="img-fluid rounded">
+                        </div>
+                        @endif
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea
+                            name="description"
+                            id="description"
+                            rows="2"
+                            class="form-control @error('description') is-invalid @enderror"
+                            placeholder="Enter banner description...">{{ old('description', $vehicleMaker->description) }}</textarea>
+                        @error('description')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -130,7 +179,12 @@
             const fileName = e.target.files[0] ? e.target.files[0].name : 'Choose file';
             e.target.nextElementSibling.textContent = fileName;
         });
-    });
 
+        const bannerInput = document.querySelector('#bannerImage');
+        bannerInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'Choose file';
+            e.target.nextElementSibling.textContent = fileName;
+        });
+    });
 </script>
 @endpush
