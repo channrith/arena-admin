@@ -6,6 +6,7 @@ use App\Helpers\SettingHelper;
 use App\Models\MediaFile;
 use App\Models\Post;
 use App\Models\PostHighlight;
+use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -47,7 +48,8 @@ class PostController extends Controller
      */
     public function create()
     {
-        return view('posts.add');
+        $services = Service::select('id', 'code', 'description')->get();
+        return view('posts.add', compact('services'));
     }
 
     /**
@@ -63,6 +65,8 @@ class PostController extends Controller
             'source' => ['nullable', 'string'],
             'translator_name' => ['nullable', 'string'],
             'published_at' => ['nullable', 'string'],
+            'service_id'      => ['required', 'array'],              // must be an array
+            'service_id.*'    => ['integer', 'exists:services,id'],  // each item must be valid
         ]);
 
         $publishedAt = null;
@@ -90,6 +94,8 @@ class PostController extends Controller
             'published_at' => $publishedAt,
             'is_special' => (int)$request->is_special,
         ]);
+
+        $post->services()->sync($validated['service_id']);
 
         if ($request->hasFile('feature_image')) {
             // Handle file upload
@@ -164,6 +170,7 @@ class PostController extends Controller
 
         $post = Post::with([
             'author:id,name',
+            'services:id,code,description',
             'currentTranslation' => function ($query) use ($locale) {
                 $query->where('language_code', $locale)
                     ->select('post_id', 'title', 'summary', 'content', 'feature_image', 'translator_name');
@@ -184,7 +191,9 @@ class PostController extends Controller
             $post->translator_name = $post->currentTranslation->translator_name;
         }
 
-        return view('posts.edit', compact('post'));
+        $services = Service::select('id', 'code', 'description')->get();
+
+        return view('posts.edit', compact('post', 'services'));
     }
 
     /**
@@ -202,6 +211,8 @@ class PostController extends Controller
             'source' => ['nullable', 'string'],
             'translator_name' => ['nullable', 'string'],
             'published_at' => ['nullable', 'string'],
+            'service_id'      => ['required', 'array'],              // must be an array
+            'service_id.*'    => ['integer', 'exists:services,id'],  // each item must be valid
         ]);
 
         $publishedAt = null;
@@ -259,6 +270,8 @@ class PostController extends Controller
             'published_at' => $publishedAt,
             'is_special' => (int)$request->is_special,
         ]);
+
+        $post->services()->sync($validated['service_id']);
 
         // Determine current locale translation
         $locale = app()->getLocale();

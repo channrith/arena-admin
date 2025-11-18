@@ -25,4 +25,9 @@ class Service extends Model
     {
         return $this->hasMany(PosterCategory::class, 'service_id');
     }
+
+    public function posts()
+    {
+        return $this->belongsToMany(Post::class, 'post_service');
+    }
 }

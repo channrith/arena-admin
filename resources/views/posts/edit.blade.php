@@ -24,6 +24,33 @@
                 <!-- Card Body -->
                 <div class="card-body">
                     <div class="form-group">
+                        <label for="service_id">Services <span class="text-danger">*</span></label>
+                        <select name="service_id[]" id="service_id"
+                            multiple="multiple"
+                            data-placeholder="Select services"
+                            class="form-control select2 @error('service_id') is-invalid @enderror"
+                            style="width: 100%;">
+
+                            @php
+                            // Get selected service IDs from old input or post relationship
+                            $selectedServices = old('service_id', $post->services->pluck('id')->toArray());
+                            @endphp
+
+                            @foreach ($services as $service)
+                            <option value="{{ $service->id }}"
+                                {{ in_array($service->id, $selectedServices) ? 'selected' : '' }}>
+                                {{ $service->description }}
+                            </option>
+                            @endforeach
+                        </select>
+
+                        @error('service_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+
+                    <div class="form-group">
                         <label for="title">Title <span class="text-danger">*</span></label>
                         <input
                             type="text"
@@ -213,6 +240,26 @@
 @push('css')
 <link rel="stylesheet" href="/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
 <link rel="stylesheet" href="/plugins/summernote/summernote-bs4.min.css">
+<link rel="stylesheet" href="/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<style>
+    .select2-container .select2-selection--single {
+        height: 38px;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        position: absolute;
+        top: 5px;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #007bff;
+        border-color: #006fe6;
+        color: #fff;
+        padding: 0 10px;
+        margin-top: .31rem;
+    }
+</style>
 @endpush
 
 {{-- Push extra scripts --}}
@@ -220,7 +267,10 @@
 <script src="/plugins/moment/moment.min.js"></script>
 <script src="/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
 <script src="/plugins/summernote/summernote-bs4.min.js"></script>
+<script src="/plugins/select2/js/select2.full.min.js"></script>
 <script>
+    $('.select2').select2();
+
     document.addEventListener('DOMContentLoaded', function() {
         const fileInput = document.querySelector('#featureImage');
         fileInput.addEventListener('change', function(e) {

@@ -35,6 +35,11 @@ class Post extends Model
         return $this->belongsTo(User::class, 'author_id');
     }
 
+    public function services()
+    {
+        return $this->belongsToMany(Service::class, 'post_service');
+    }
+
     public function translations()
     {
         return $this->hasMany(PostTranslation::class);

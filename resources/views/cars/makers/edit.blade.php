@@ -24,9 +24,9 @@
                 <!-- Card Body -->
                 <div class="card-body">
                     <div class="form-group">
-                        <label>Service Code</label>
+                        <label>Service</label>
                         <select class="form-control" disabled>
-                            <option>{{ $vehicleMaker->service->code }}</option>
+                            <option>{{ $vehicleMaker->service->description }}</option>
                         </select>
                     </div>
 
