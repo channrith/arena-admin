@@ -335,6 +335,20 @@ return [
             ],
         ],
         [
+            'text' => 'videos',
+            'icon' => 'fas fa-fw fa-video',
+            'submenu' => [
+                [
+                    'text' => 'videos.all',
+                    'url' => 'videos',
+                ],
+                [
+                    'text' => 'videos.add',
+                    'url' => 'videos/create',
+                ],
+            ],
+        ],
+        [
             'text' => 'cars',
             'icon' => 'fas fa-fw fa-car',
             'submenu' => [

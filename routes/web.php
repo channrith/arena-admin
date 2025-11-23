@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PosterController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\VideoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -47,3 +48,10 @@ Route::get('/posters/create', [PosterController::class, 'create'])->name('poster
 Route::post('/posters', [PosterController::class, 'store'])->name('posters.store');
 Route::put('/posters/{id}', [PosterController::class, 'update'])->name('posters.update');
 Route::delete('/posters/{id}', [PosterController::class, 'destroy'])->name('posters.destroy');
+
+Route::get('/videos', [VideoController::class, 'index'])->name('videos.index');
+Route::get('/videos/{id}/edit', [VideoController::class, 'edit'])->name('videos.edit');
+Route::get('/videos/create', [VideoController::class, 'create'])->name('videos.add');
+Route::post('/videos', [VideoController::class, 'store'])->name('videos.store');
+Route::put('/videos/{id}', [VideoController::class, 'update'])->name('videos.update');
+Route::delete('/videos/{id}', [VideoController::class, 'destroy'])->name('videos.destroy');
