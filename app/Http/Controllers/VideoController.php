@@ -48,6 +48,7 @@ class VideoController extends Controller
             'services'
         ])
             ->select('id', 'title', 'youtube_id', 'active', 'created_at')
+            ->orderBy('created_at', 'DESC')
             ->paginate(15);
 
         return view('videos.index', compact('videos'));
