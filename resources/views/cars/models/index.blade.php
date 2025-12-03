@@ -49,21 +49,28 @@
                                     style="max-height: 50px;"></td>
                             <td>{{ $vehicle->name }}</td>
                             <td>{{ $vehicle->maker->name }}</td>
-                            <td class="project-actions text-right">
-                                <a class="btn btn-primary btn-sm" href="{{ route('cars.models.edit', $vehicle->id) }}">
-                                    <i class="fas fa-pencil-alt"></i>
-                                    Edit
+                            <td class="project-actions text-right dropdown">
+                                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                                    Actions <span class="caret"></span>
                                 </a>
-                                <button
-                                    type="button"
-                                    class="btn btn-danger btn-sm btn-delete"
-                                    data-id="{{ $vehicle->id }}"
-                                    data-title="{{ $vehicle->name }}"
-                                    data-toggle="modal"
-                                    data-target="#modal-confirm-delete">
-                                    <i class="fas fa-trash"></i>
-                                    Delete
-                                </button>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" tabindex="-1" href="{{ route('cars.models.edit', $vehicle->id) }}">
+                                        <i class="fas fa-pencil-alt"></i> Edit
+                                    </a>
+                                    <a class="dropdown-item" tabindex="-1" href="{{ route('cars.models.colors.edit', $vehicle->id) }}">
+                                        <i class="fas fa-palette"></i> Add Colors
+                                    </a>
+                                    <a class="dropdown-item" tabindex="-1" href="{{ route('cars.models.images.edit', $vehicle->id) }}">
+                                        <i class="fas fa-image"></i> Add Photos
+                                    </a>
+                                    <a class="dropdown-item btn-delete" tabindex="-1" href="{{ route('cars.models.edit', $vehicle->id) }}"
+                                        data-id="{{ $vehicle->id }}"
+                                        data-title="{{ $vehicle->name }}"
+                                        data-toggle="modal"
+                                        data-target="#modal-confirm-delete">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         @endforeach
@@ -119,6 +126,14 @@
 @push('css')
 {{-- Add here extra stylesheets --}}
 {{-- <link rel="stylesheet" href="/css/admin_custom.css"> --}}
+<style>
+    a.dropdown-toggle {
+        color: #212529;
+    }
+    a.btn-delete, a.btn-delete:hover {
+        color: #dc3545;
+    }
+</style>
 @endpush
 
 {{-- Push extra scripts --}}

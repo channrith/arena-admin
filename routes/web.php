@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Cars\CarModelColorController;
 use App\Http\Controllers\Cars\MakerController;
 use App\Http\Controllers\Cars\CarModelController;
+use App\Http\Controllers\Cars\CarModelImageController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PosterController;
@@ -41,6 +43,20 @@ Route::get('/car-models/create', [CarModelController::class, 'create'])->name('c
 Route::post('/car-models', [CarModelController::class, 'store'])->name('cars.models.store');
 Route::put('/car-models/{id}', [CarModelController::class, 'update'])->name('cars.models.update');
 Route::delete('/car-models/{id}', [CarModelController::class, 'destroy'])->name('cars.models.destroy');
+
+Route::prefix('car-models')->name('cars.models.')->group(function () {
+    Route::get('{id}/colors/edit', [CarModelColorController::class, 'edit'])
+        ->name('colors.edit');
+
+    Route::put('{id}/colors', [CarModelColorController::class, 'update'])
+        ->name('colors.update');
+
+    Route::get('{id}/images/edit', [CarModelImageController::class, 'edit'])
+        ->name('images.edit');
+
+    Route::put('{id}/images', [CarModelImageController::class, 'update'])
+        ->name('images.update');
+});
 
 Route::get('/posters', [PosterController::class, 'index'])->name('posters.index');
 Route::get('/posters/{id}/edit', [PosterController::class, 'edit'])->name('posters.edit');

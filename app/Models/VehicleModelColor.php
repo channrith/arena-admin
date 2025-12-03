@@ -8,9 +8,9 @@ class VehicleModelColor extends Model
 {
     protected $fillable = [
         'model_id',
-        'alt_text',
+        'color_name',
+        'color_hex',
         'image_url',
-        'sequence',
     ];
 
     public function model()
