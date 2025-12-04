@@ -5,11 +5,23 @@
         <button type="button" class="btn btn-sm btn-danger remove-color">×</button>
     </div>
 
-    <div class="form-group mt-2">
-        <label>Color Name <span class="text-danger">*</span></label>
-        <input type="text" name="colors[color_name][]"
-            value="{{ $color->color_name ?? '' }}"
-            class="form-control" required>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="form-group mt-2">
+                <label>Color Name <span class="text-danger">*</span></label>
+                <input type="text" name="colors[color_name][]"
+                    value="{{ $color->color_name ?? '' }}"
+                    class="form-control" required>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group mt-2">
+                <label>Color Code <span class="text-danger">*</span></label>
+                <input type="text" name="colors[color_hex][]"
+                    value="{{ $color->color_hex ?? '' }}"
+                    class="form-control" required>
+            </div>
+        </div>
     </div>
 
     <div class="form-group mt-2">
@@ -24,13 +36,6 @@
         <input type="file"
             name="colors[image][]"
             class="form-control color-image-input">
-    </div>
-
-    <div class="form-group">
-        <label>Color Code <span class="text-danger">*</span></label>
-        <input type="text" name="colors[color_hex][]"
-            value="{{ $color->color_hex ?? '' }}"
-            class="form-control" required>
     </div>
 
     @if(!empty($color))

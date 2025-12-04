@@ -38,6 +38,7 @@ class PostController extends Controller
             }
         ])
             ->select('id', 'author_id', 'source', 'status', 'is_special', 'published_at')
+            ->orderBy('created_at', 'desc')
             ->paginate(15);
 
         return view('posts.index', compact('posts'));

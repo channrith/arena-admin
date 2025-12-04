@@ -5,11 +5,23 @@
         <button type="button" class="btn btn-sm btn-danger remove-image">x</button>
     </div>
 
-    <div class="form-group mt-2">
-        <label>Alt Text <span class="text-danger">*</span></label>
-        <input type="text" name="images[alt_text][]" 
-               value="{{ $image->alt_text ?? '' }}"
-               class="form-control" required>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="form-group mt-2">
+                <label>Alt Text <span class="text-danger">*</span></label>
+                <input type="text" name="images[alt_text][]"
+                    value="{{ $image->alt_text ?? '' }}"
+                    class="form-control" required>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group mt-2">
+                <label>Sequence</label>
+                <input type="number" name="images[sequence][]"
+                    value="{{ $image->sequence ?? 0 }}"
+                    class="form-control">
+            </div>
+        </div>
     </div>
 
     <div class="form-group mt-2">
@@ -24,13 +36,6 @@
         <input type="file"
             name="images[image][]"
             class="form-control image-image-input">
-    </div>
-
-    <div class="form-group">
-        <label>Sequence</label>
-        <input type="number" name="images[sequence][]" 
-               value="{{ $image->sequence ?? 0 }}"
-               class="form-control">
     </div>
 
     @if(!empty($image))
