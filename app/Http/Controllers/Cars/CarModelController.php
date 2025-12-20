@@ -30,7 +30,7 @@ class CarModelController extends Controller
 
         $vehicles = VehicleModel::with([
             'maker:id,name,slug',
-        ])->orderBy('name')->paginate(15);
+        ])->orderBy('id', 'desc')->paginate(15);
 
         return view('cars.models.index', compact('vehicles'));
     }

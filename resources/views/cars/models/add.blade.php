@@ -111,6 +111,31 @@
                     <h3 class="card-title">Car Specifications</h3>
                 </div>
                 <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label class="font-weight-bold mb-0">Import Specs from CSV</label>
+
+                        <button type="button"
+                            class="btn btn-sm btn-outline-success"
+                            id="downloadCsvTemplate">
+                            <i class="fas fa-download"></i> Download CSV Template
+                        </button>
+                    </div>
+
+                    <div class="mb-2">
+                        <div class="custom-file">
+                            <input
+                                type="file"
+                                class="custom-file-input"
+                                id="specCsvFile"
+                                accept=".csv">
+                            <label class="custom-file-label" for="specCsvFile">
+                                Choose CSV file
+                            </label>
+                        </div>
+                        <small class="text-muted">
+                            CSV columns: category_id, label, label_kh, value
+                        </small>
+                    </div>
                     @foreach ($categories as $category)
                     <div class="spec-category border rounded p-3 mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -258,4 +283,140 @@
         }
     });
 </script>
+<script>
+    document.getElementById('specCsvFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const text = event.target.result;
+            parseCsvAndFillSpecs(text);
+        };
+        reader.readAsText(file);
+
+        e.target.nextElementSibling.textContent = file.name;
+    });
+
+    function parseCsvRow(row) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < row.length; i++) {
+            const char = row[i];
+
+            if (char === '"' && row[i + 1] === '"') {
+                current += '"';
+                i++;
+            } else if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        result.push(current.trim());
+
+        return result;
+    }
+
+
+    function parseCsvAndFillSpecs(csvText) {
+        const rows = csvText.trim().split('\n');
+        const headers = rows.shift().split(',').map(h => h.trim());
+
+        const requiredHeaders = ['category_id', 'label', 'label_kh', 'value'];
+        for (const h of requiredHeaders) {
+            if (!headers.includes(h)) {
+                alert('Invalid CSV format');
+                return;
+            }
+        }
+
+        rows.forEach(row => {
+            if (!row.trim()) return;
+
+            const cols = parseCsvRow(row);
+            const data = Object.fromEntries(headers.map((h, i) => [h, cols[i]]));
+
+            const categoryId = data.category_id;
+            const tableBody = document.querySelector(
+                `.spec-table[data-category="${categoryId}"] tbody`
+            );
+
+            if (!tableBody) return;
+
+            const rowCount = tableBody.querySelectorAll('tr').length;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+            <td>
+                <input type="text"
+                    name="specs[${categoryId}][${rowCount}][label]"
+                    class="form-control"
+                    value="${data.label || ''}">
+            </td>
+            <td>
+                <input type="text"
+                    name="specs[${categoryId}][${rowCount}][label_kh]"
+                    class="form-control"
+                    value="${data.label_kh || ''}">
+            </td>
+            <td>
+                <input type="text"
+                    name="specs[${categoryId}][${rowCount}][value]"
+                    class="form-control"
+                    value="${data.value || ''}">
+            </td>
+            <td>
+                <input type="number"
+                    name="specs[${categoryId}][${rowCount}][sequence]"
+                    class="form-control"
+                    value="${rowCount + 1}">
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-danger remove-spec">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+            console.log(tr);
+
+            tableBody.appendChild(tr);
+        });
+    }
+</script>
+<script>
+    document.getElementById('downloadCsvTemplate').addEventListener('click', function() {
+
+        // UTF-8 BOM (required for Khmer text in Excel)
+        let csvContent = '\uFEFF';
+
+        // Header row
+        csvContent += 'category_id,label,label_kh,value\n';
+
+        // Example rows per category
+        @foreach($categories as $category)
+        csvContent += '{{ $category['id'] }},Example Label,ឧទាហរណ៍,Example Value\n';
+        @endforeach
+
+        // Create Blob with UTF-8 encoding
+        const blob = new Blob([csvContent], {
+            type: 'text/csv;charset=utf-8;'
+        });
+
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'car-specs-template-kh.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+</script>
+
 @endpush
