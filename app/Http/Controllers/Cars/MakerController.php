@@ -25,7 +25,7 @@ class MakerController extends Controller
     {
         $locale = app()->getLocale();
 
-        $vehicles = VehicleMaker::paginate(15);
+        $vehicles = VehicleMaker::orderBy('created_at', 'DESC')->paginate(15);
 
         return view('cars.makers.index', compact('vehicles'));
     }

@@ -26,7 +26,7 @@ class VehicleTypeController extends Controller
     {
         $locale = app()->getLocale();
 
-        $vehicles = VehicleType::paginate(15);
+        $vehicles = VehicleType::orderBy('created_at', 'DESC')->paginate(15);
 
         return view('cars.types.index', compact('vehicles'));
     }
