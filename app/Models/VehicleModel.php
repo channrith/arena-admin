@@ -9,6 +9,7 @@ class VehicleModel extends Model
 {
     protected $fillable = [
         'maker_id',
+        'series_id',
         'name',
         'slug',
         'is_global_model',
@@ -70,6 +71,24 @@ class VehicleModel extends Model
     public function maker()
     {
         return $this->belongsTo(VehicleMaker::class, 'maker_id');
+    }
+
+    public function series()
+    {
+        return $this->belongsTo(VehicleSeries::class, 'series_id');
+    }
+
+    // Convenience: access type directly (VehicleModel → Series → Type)
+    public function type()
+    {
+        return $this->hasOneThrough(
+            VehicleType::class,
+            VehicleSeries::class,
+            'id',        // Foreign key on vehicle_series
+            'id',        // Foreign key on vehicle_types
+            'series_id', // Local key on vehicle_models
+            'type_id'    // Local key on vehicle_series
+        );
     }
 
     public function images()

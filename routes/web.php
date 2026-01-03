@@ -4,6 +4,7 @@ use App\Http\Controllers\Cars\CarModelColorController;
 use App\Http\Controllers\Cars\MakerController;
 use App\Http\Controllers\Cars\CarModelController;
 use App\Http\Controllers\Cars\CarModelImageController;
+use App\Http\Controllers\Cars\VehicleTypeController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PosterController;
@@ -36,6 +37,13 @@ Route::get('/car-makers/create', [MakerController::class, 'create'])->name('cars
 Route::post('/car-makers', [MakerController::class, 'store'])->name('cars.makers.store');
 Route::put('/car-makers/{id}', [MakerController::class, 'update'])->name('cars.makers.update');
 Route::delete('/car-makers/{id}', [MakerController::class, 'destroy'])->name('cars.makers.destroy');
+
+Route::get('/vehicle-types', [VehicleTypeController::class, 'index'])->name('cars.types.index');
+Route::get('/vehicle-types/{id}/edit', [VehicleTypeController::class, 'edit'])->name('cars.types.edit');
+Route::get('/vehicle-types/create', [VehicleTypeController::class, 'create'])->name('cars.types.add');
+Route::post('/vehicle-types', [VehicleTypeController::class, 'store'])->name('cars.types.store');
+Route::put('/vehicle-types/{id}', [VehicleTypeController::class, 'update'])->name('cars.types.update');
+Route::delete('/vehicle-types/{id}', [VehicleTypeController::class, 'destroy'])->name('cars.types.destroy');
 
 Route::get('/car-models', [CarModelController::class, 'index'])->name('cars.models.index');
 Route::get('/car-models/{id}/edit', [CarModelController::class, 'edit'])->name('cars.models.edit');

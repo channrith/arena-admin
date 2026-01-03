@@ -367,6 +367,20 @@ return [
                     ],
                 ],
                 [
+                    'text' => 'cars.types',
+                    'icon' => 'fas fa-fw fa-car-side',
+                    'submenu' => [
+                        [
+                            'text' => 'cars.types.all',
+                            'url' => 'vehicle-types',
+                        ],
+                        [
+                            'text' => 'cars.types.add',
+                            'url' => 'vehicle-types/create',
+                        ],
+                    ],
+                ],
+                [
                     'text' => 'cars.models',
                     'icon' => 'fas fa-fw fa-flag',
                     'submenu' => [
