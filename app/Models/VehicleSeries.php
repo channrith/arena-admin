@@ -12,8 +12,6 @@ class VehicleSeries extends Model
         'type_id',
         'name',
         'slug',
-        'is_global_model',
-        'is_local_model',
     ];
 
     public static function generateUniqueSlug(string $name, $makerId, $ignoreId = null)

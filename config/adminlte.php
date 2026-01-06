@@ -381,6 +381,20 @@ return [
                     ],
                 ],
                 [
+                    'text' => 'cars.series',
+                    'icon' => 'fas fa-fw fa-layer-group',
+                    'submenu' => [
+                        [
+                            'text' => 'cars.series.all',
+                            'url' => 'vehicle-series',
+                        ],
+                        [
+                            'text' => 'cars.series.add',
+                            'url' => 'vehicle-series/create',
+                        ],
+                    ],
+                ],
+                [
                     'text' => 'cars.models',
                     'icon' => 'fas fa-fw fa-flag',
                     'submenu' => [

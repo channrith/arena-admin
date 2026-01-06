@@ -22,8 +22,6 @@ class CarModelImageController extends Controller
     {
         $settings = SettingHelper::getDefaultSettings();
         $this->settings = $settings;
-
-        $this->middleware('auth');
     }
 
     public function edit(string $id)

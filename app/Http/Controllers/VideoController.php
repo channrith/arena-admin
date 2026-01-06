@@ -10,16 +10,6 @@ use Illuminate\Support\Facades\DB;
 
 class VideoController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     private function extractYoutubeId($url)
     {
         // If user enters only the ID

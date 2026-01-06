@@ -21,7 +21,6 @@ class PosterController extends Controller
     public function __construct()
     {
         $this->service = Service::where('code', 'acauto')->first();
-        $this->middleware('auth');
     }
 
     /**
