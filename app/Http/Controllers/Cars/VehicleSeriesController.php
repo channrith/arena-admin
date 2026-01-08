@@ -2,14 +2,11 @@
 
 namespace App\Http\Controllers\Cars;
 
-use App\Helpers\SettingHelper;
 use App\Http\Controllers\Controller;
-use App\Models\Service;
 use App\Models\VehicleMaker;
 use App\Models\VehicleSeries;
 use App\Models\VehicleType;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
 
 class VehicleSeriesController extends Controller
@@ -30,7 +27,7 @@ class VehicleSeriesController extends Controller
             ->orderBy('maker_id')
             ->orderBy('type_id')
             ->orderBy('name')
-            ->paginate(20);
+            ->paginate(15);
 
         return view('cars.series.index', [
             'series' => $series,
@@ -83,6 +80,8 @@ class VehicleSeriesController extends Controller
             'type_id' => $type->id,
             'slug' => $slug,
             'name' => $validated['name'],
+            'is_global_model' => (int) $request->is_global_model ?? 0,
+            'is_local_model' => (int) $request->is_local_model ?? 0,
         ]);
 
         return redirect()->route('cars.series.index')->with('success', 'Item created successfully!');
@@ -136,6 +135,8 @@ class VehicleSeriesController extends Controller
             $series->slug = $this->generateUniqueSlug($baseSlug, $series->id);
         }
 
+        $series->is_global_model = (int) $request->is_global_model ?? 0;
+        $series->is_local_model = (int) $request->is_local_model ?? 0;
         $series->update($validated);
 
         return redirect()->route('cars.series.index')->with('success', 'Item updated successfully!');

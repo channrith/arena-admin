@@ -3,6 +3,12 @@
 use App\Http\Controllers\Cars\VehicleSeriesController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/cars/series/by-maker/{maker}', function ($makerId) {
+    return \App\Models\VehicleSeries::where('maker_id', $makerId)
+        ->orderBy('name')
+        ->get(['id', 'name']);
+})->name('cars.series.byMaker');
+
 Route::middleware('auth')
     ->prefix('vehicle-series')
     ->name('cars.series.')

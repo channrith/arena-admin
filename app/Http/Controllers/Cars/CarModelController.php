@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use App\Models\VehicleMaker;
 use App\Models\VehicleModel;
+use App\Models\VehicleSeries;
 use App\Models\VehicleSpec;
 use App\Models\VehicleSpecCategory;
 use Illuminate\Http\Request;
@@ -28,7 +29,7 @@ class CarModelController extends Controller
     public function create()
     {
         $categories = config('constant.CAR_SPEC_CATEGORIES');
-        $makers = VehicleMaker::all();
+        $makers = VehicleMaker::orderBy('name')->get();
         return view('cars.models.add', compact(['categories', 'makers']));
     }
 
@@ -37,8 +38,9 @@ class CarModelController extends Controller
         $validated = $request->validate([
             'image_url' => ['sometimes', 'image', 'max:2048'],
             'name' => ['required', 'string', 'max:255'],
-            'year_of_production' => ['required', 'integer'],
-            'maker_id' => ['required', 'integer'],
+            'maker_id' => ['required', 'exists:vehicle_makers,id'],
+            // 'series_id' => ['required', 'exists:vehicle_series,id'],
+            'series_id' => ['nullable'],
             'year_of_production' => ['nullable'],
         ]);
 
@@ -76,13 +78,13 @@ class CarModelController extends Controller
             // Save to database
             $model = VehicleModel::create([
                 'maker_id' => $validated['maker_id'],
+                'series_id' => $validated['series_id'] ?? 0,
                 'slug' => $slug,
                 'name' => $validated['name'],
                 'year_of_production' => $validated['year_of_production'],
                 'image_url' => $cdnFilePath,
                 'is_global_model' => (int) $request->is_global_model ?? 0,
                 'is_local_model' => (int) $request->is_local_model ?? 0,
-                'year_of_production' => $validated['year_of_production'],
             ]);
 
             // Prepare bulk specs data
@@ -131,14 +133,35 @@ class CarModelController extends Controller
 
     public function edit(string $id)
     {
-        $makers = VehicleMaker::all();
+        $makers = VehicleMaker::orderBy('name')->get();
         $vehicle = VehicleModel::with('maker:id,name,slug')->findOrFail($id);
         $categories = VehicleSpecCategory::where('model_id', $vehicle->id)
             ->with(['specs'])
             ->orderBy('sequence')
             ->get();
 
-        return view('cars.models.edit', compact(['categories', 'vehicle', 'makers']));
+        if ($categories->isEmpty()) {
+            $categories = collect(config('constant.CAR_SPEC_CATEGORIES'))->map(function ($category) {
+                return (object) [
+                    'id' => $category['id'],
+                    'name' => $category['name'],
+                    'name_kh' => $category['name_kh'],
+                    'sequence' => $category['sequence'],
+                    'specs' => collect(),
+                ];
+            });
+        }
+
+        $series = VehicleSeries::where('maker_id', $vehicle->maker_id)
+            ->orderBy('name')
+            ->get();
+
+        return view('cars.models.edit', compact([
+            'categories',
+            'vehicle',
+            'makers',
+            'series'
+        ]));
     }
 
     public function update(Request $request, string $id)
@@ -146,8 +169,9 @@ class CarModelController extends Controller
         $validated = $request->validate([
             'image_url' => ['sometimes', 'image', 'max:2048'],
             'name' => ['required', 'string', 'max:255'],
-            'year_of_production' => ['required', 'integer'],
-            'maker_id' => ['required', 'integer'],
+            'maker_id' => ['required', 'exists:vehicle_makers,id'],
+            // 'series_id' => ['required', 'exists:vehicle_series,id'],
+            'series_id' => ['nullable'],
             'year_of_production' => ['nullable'],
         ]);
 
@@ -183,13 +207,13 @@ class CarModelController extends Controller
         try {
             $model->update([
                 'maker_id' => $validated['maker_id'],
+                'series_id' => $validated['series_id'] ?? 0,
                 'slug' => $slug,
                 'name' => $validated['name'],
                 'year_of_production' => $validated['year_of_production'],
                 'image_url' => $cdnFilePath,
                 'is_global_model' => (int) $request->is_global_model ?? 0,
                 'is_local_model' => (int) $request->is_local_model ?? 0,
-                'year_of_production' => $validated['year_of_production'],
             ]);
 
             $oldSpecIds = VehicleSpec::where('model_id', $model->id)->pluck('id')->toArray();

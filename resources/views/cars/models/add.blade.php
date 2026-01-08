@@ -25,13 +25,12 @@
                 <!-- Card Body -->
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-8">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label for="maker_id">Car Maker <span class="text-danger">*</span></label>
                                 <select name="maker_id"
                                     id="maker_id"
-                                    class="form-control select2 @error('maker_id') is-invalid @enderror"
-                                    style="height: 38px;">
+                                    class="form-control select2 @error('maker_id') is-invalid @enderror">
                                     <option value="">-- Select Car Maker --</option>
                                     @foreach ($makers as $maker)
                                     <option value="{{ $maker->id }}" {{ old('maker_id') == $maker->id ? 'selected' : '' }}>
@@ -40,6 +39,21 @@
                                     @endforeach
                                 </select>
                                 @error('maker_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="series_id">Vehicle Series</label>
+                                <select
+                                    name="series_id"
+                                    id="series_id"
+                                    class="form-control select2 @error('series_id') is-invalid @enderror"
+                                    disabled>
+                                    <option value="">-- Select Series --</option>
+                                </select>
+                                @error('series_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -416,6 +430,42 @@
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    });
+</script>
+<script>
+    $('#maker_id').on('change', function() {
+        const makerId = $(this).val();
+        const seriesSelect = $('#series_id');
+
+        seriesSelect.prop('disabled', true);
+        seriesSelect.empty().append('<option value="">Loading...</option>');
+
+        if (!makerId) {
+            seriesSelect
+                .empty()
+                .append('<option value="">-- Select Series --</option>')
+                .prop('disabled', true);
+            return;
+        }
+
+        fetch(`/cars/series/by-maker/${makerId}`)
+            .then(response => response.json())
+            .then(data => {
+                seriesSelect.empty().append('<option value="">-- Select Series --</option>');
+
+                data.forEach(series => {
+                    seriesSelect.append(
+                        `<option value="${series.id}">${series.name}</option>`
+                    );
+                });
+
+                seriesSelect.prop('disabled', false).trigger('change');
+            })
+            .catch(() => {
+                seriesSelect
+                    .empty()
+                    .append('<option value="">Failed to load series</option>');
+            });
     });
 </script>
 

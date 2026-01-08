@@ -36,7 +36,6 @@
                             <th>Maker</th>
                             <th>Type</th>
                             <th>Series</th>
-                            <th>Slug</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -47,7 +46,6 @@
                             <td>{{ $vehicle->maker->name }}</td>
                             <td>{{ $vehicle->type->name }}</td>
                             <td>{{ $vehicle->name }}</td>
-                            <td>{{ $vehicle->slug }}</td>
                             <td class="project-actions text-right">
                                 <a class="btn btn-primary btn-sm" href="{{ route('cars.series.edit', $vehicle->id) }}">
                                     <i class="fas fa-pencil-alt"></i>
