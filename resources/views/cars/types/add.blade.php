@@ -10,7 +10,7 @@
 
 @section('content_body')
 <!-- resources/views/posts/create.blade.php -->
-<form action="{{ route('cars.types.store') }}" method="POST">
+<form action="{{ route('cars.types.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
 
     <div class="row">
@@ -73,7 +73,43 @@
             </div>
 
         </div>
+        <div class="col-md-3">
+            <div class="card card-outline card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        Icon
+                    </h3>
+                </div>
 
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="form-group">
+                        <div class="custom-file">
+                            <input
+                                type="file"
+                                class="custom-file-input @error('icon_url') is-invalid @enderror"
+                                id="featureImage"
+                                name="icon_url">
+                            <label class="custom-file-label" for="featureImage">Choose file</label>
+                            @error('icon_url')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="mt-3 text-center">
+                        <img id="imagePreview" src="#" alt="Preview" class="img-fluid rounded d-none" style="max-height: 120px;">
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="card-footer text-right">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Create
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </form>
 
@@ -89,5 +125,22 @@
 {{-- Push extra scripts --}}
 
 @push('js')
-{{-- <script></script> --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.querySelector('#featureImage');
+        fileInput.addEventListener('change', function(e) {
+            const [file] = e.target.files;
+            const preview = document.getElementById('imagePreview');
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('d-none');
+            } else {
+                preview.classList.add('d-none');
+            }
+
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'Choose file';
+            e.target.nextElementSibling.textContent = fileName;
+        });
+    });
+</script>
 @endpush

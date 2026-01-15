@@ -11,6 +11,7 @@ class VehicleType extends Model
         'name',
         'slug',
         'sequence',
+        'icon_url',
     ];
 
     public function series()

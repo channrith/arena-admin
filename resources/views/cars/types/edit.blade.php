@@ -8,7 +8,7 @@
 {{-- Content body --}}
 @section('content_body')
 <!-- resources/views/posts/edit.blade.php -->
-<form action="{{ route('cars.types.update', $vehicleType->id) }}" method="POST">
+<form action="{{ route('cars.types.update', $vehicleType->id) }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
 
@@ -60,6 +60,46 @@
                         @enderror
                     </div>
                 </div>
+            </div>
+
+        </div>
+        <div class="col-md-3">
+            <div class="card card-outline card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        Icon
+                    </h3>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="form-group">
+                        <div class="custom-file">
+                            <input
+                                type="file"
+                                class="custom-file-input @error('icon_url') is-invalid @enderror"
+                                id="featureImage"
+                                name="icon_url">
+                            <label class="custom-file-label" for="featureImage">
+                                Choose file
+                            </label>
+                            @error('icon_url')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- Show current image preview --}}
+                        @if($vehicleType->icon_url)
+                        <div class="mt-3">
+                            <p>Current Image:</p>
+                            <img src="{{ $vehicleType->icon_url }}"
+                                alt="Feature Image"
+                                class="img-fluid rounded"
+                                style="max-height: 200px;">
+                        </div>
+                        @endif
+                    </div>
+                </div>
 
                 <!-- Footer -->
                 <div class="card-footer text-right">
@@ -71,7 +111,6 @@
                     </button>
                 </div>
             </div>
-
         </div>
     </div>
 </form>
@@ -85,5 +124,13 @@
 
 {{-- Push extra scripts --}}
 @push('js')
-{{-- <script></script> --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.querySelector('#featureImage');
+        fileInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'Choose file';
+            e.target.nextElementSibling.textContent = fileName;
+        });
+    });
+</script>
 @endpush

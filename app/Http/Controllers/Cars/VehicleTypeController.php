@@ -29,15 +29,42 @@ class VehicleTypeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'icon_url' => 'sometimes|image|max:2048',
             'name'     => 'required|string|max:100|unique:vehicle_types,name',
             'sequence' => 'required|integer|min:0',
         ]);
 
+        $settings = SettingHelper::getDefaultSettings();
+        $iconCdnFilePath = null;
         $service = Service::where('code', 'acauto')->first();
+
+        if ($request->hasFile('icon_url')) {
+            $file = $request->file('icon_url');
+            $folder = 'acauto/type';
+
+            // Send POST request to CDN API
+            $response = Http::attach(
+                'file',
+                file_get_contents($file->getRealPath()),
+                $file->getClientOriginalName()
+            )->withHeaders([
+                'Authorization' => $settings->cdn_api_token,
+                $settings->cdn_service_code_key => $settings->cdn_service_code_value,
+            ])->post($settings->upload_api_url . '/api/upload/single?folder=' . $folder);
+
+            if (!$response->successful() || !$response->json('success')) {
+                \Log::error('CDN upload failed', ['response' => $response->body()]);
+                return back()->withErrors(['icon_url' => 'Failed to upload logo to CDN.']);
+            }
+
+            // $cdnUrl = $response->json('url');
+            $iconCdnFilePath = $response->json('filePath');
+        }
 
         // Save to database
         VehicleType::create([
             'service_id' => $service ? $service->id : null,
+            'icon_url' => $iconCdnFilePath,
             'slug' => \Str::slug($validated['name']),
             'name' => $validated['name'],
             'sequence' => $validated['sequence'],
@@ -58,6 +85,7 @@ class VehicleTypeController extends Controller
         $vehicleType = VehicleType::with('service')->findOrFail($id);
 
         $validated = $request->validate([
+            'icon_url' => ['sometimes', 'image', 'max:2048'],
             'name' => [
                 'required',
                 'string',
@@ -67,7 +95,34 @@ class VehicleTypeController extends Controller
             'sequence' => 'required|integer|min:0',
         ]);
 
+        $settings = SettingHelper::getDefaultSettings();
+        $iconCdnFilePath = $vehicleType->icon_url ?? null;
+
+        if ($request->hasFile('icon_url')) {
+            $file = $request->file('icon_url');
+            $folder = 'acauto/type';
+
+            // Send POST request to CDN API
+            $response = Http::attach(
+                'file',
+                file_get_contents($file->getRealPath()),
+                $file->getClientOriginalName()
+            )->withHeaders([
+                'Authorization' => $settings->cdn_api_token,
+                $settings->cdn_service_code_key => $settings->cdn_service_code_value,
+            ])->post($settings->upload_api_url . '/api/upload/single?folder=' . $folder);
+
+            if (!$response->successful() || !$response->json('success')) {
+                \Log::error('CDN upload failed', ['response' => $response->body()]);
+                return back()->withErrors(['icon_url' => 'Failed to upload icon to CDN.']);
+            }
+
+            // $cdnUrl = $response->json('url');
+            $iconCdnFilePath = $response->json('filePath');
+        }
+
         $vehicleType->update([
+            'icon_url' => $iconCdnFilePath,
             'slug' => \Str::slug($validated['name']),
             'name' => $validated['name'],
             'sequence' => $validated['sequence'],
