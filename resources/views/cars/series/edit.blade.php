@@ -7,7 +7,7 @@
 
 {{-- Content body --}}
 @section('content_body')
-<form action="{{ route('cars.series.update', $series->id) }}" method="POST">
+<form action="{{ route('cars.series.update', $series->id) }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
 
@@ -113,15 +113,59 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card card-outline card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        Feature Image
+                    </h3>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="form-group">
+                        <div class="custom-file">
+                            <input
+                                type="file"
+                                class="custom-file-input @error('image_url') is-invalid @enderror"
+                                id="featureImage"
+                                name="image_url">
+                            <label class="custom-file-label" for="featureImage">
+                                Choose file
+                            </label>
+                            @error('image_url')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- Show current image preview --}}
+                        @if($series->image_url)
+                        <div class="mt-3">
+                            <p>Current Image:</p>
+                            <img src="{{ $series->image_url }}"
+                                alt="Feature Image"
+                                class="img-fluid rounded"
+                                style="max-height: 200px;">
+                        </div>
+                        @endif
+                    </div>
+                </div>
 
                 <!-- Footer -->
                 <div class="card-footer text-right">
+                    <a href="{{ route('cars.series.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Update Series
+                        <i class="fas fa-save"></i> Update
                     </button>
                 </div>
             </div>
         </div>
+
     </div>
 </form>
 @stop
@@ -148,5 +192,13 @@
 <script src="/plugins/select2/js/select2.full.min.js"></script>
 <script>
     $('.select2').select2();
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.querySelector('#featureImage');
+        fileInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'Choose file';
+            e.target.nextElementSibling.textContent = fileName;
+        });
+    });
 </script>
 @endpush

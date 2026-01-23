@@ -10,6 +10,7 @@ class VehicleSeries extends Model
     protected $fillable = [
         'maker_id',
         'type_id',
+        'image_url',
         'name',
         'slug',
         'is_global_model',

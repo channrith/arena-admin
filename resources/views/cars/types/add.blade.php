@@ -9,7 +9,6 @@
 {{-- Content body: main page content --}}
 
 @section('content_body')
-<!-- resources/views/posts/create.blade.php -->
 <form action="{{ route('cars.types.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
 

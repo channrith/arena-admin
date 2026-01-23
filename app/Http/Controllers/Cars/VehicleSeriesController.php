@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Cars;
 
+use App\Helpers\SettingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\VehicleMaker;
 use App\Models\VehicleSeries;
 use App\Models\VehicleType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
 
 class VehicleSeriesController extends Controller
@@ -47,6 +49,7 @@ class VehicleSeriesController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'image_url' => ['sometimes', 'image', 'max:2048'],
             'maker_id' => ['required', 'exists:vehicle_makers,id'],
             'type_id'  => ['required', 'exists:vehicle_types,id'],
             'name'     => [
@@ -64,6 +67,8 @@ class VehicleSeriesController extends Controller
             'name.unique' => 'This vehicle series already exists for the selected maker and type.',
         ]);
 
+        $settings = SettingHelper::getDefaultSettings();
+        $imageCdnFilePath = null;
         $maker = VehicleMaker::findOrFail($validated['maker_id']);
         $type  = VehicleType::findOrFail($validated['type_id']);
 
@@ -74,8 +79,32 @@ class VehicleSeriesController extends Controller
 
         $slug = $this->generateUniqueSlug($baseSlug);
 
+        if ($request->hasFile('image_url')) {
+            $file = $request->file('image_url');
+            $folder = 'acauto/series';
+
+            // Send POST request to CDN API
+            $response = Http::attach(
+                'file',
+                file_get_contents($file->getRealPath()),
+                $file->getClientOriginalName()
+            )->withHeaders([
+                'Authorization' => $settings->cdn_api_token,
+                $settings->cdn_service_code_key => $settings->cdn_service_code_value,
+            ])->post($settings->upload_api_url . '/api/upload/single?folder=' . $folder);
+
+            if (!$response->successful() || !$response->json('success')) {
+                \Log::error('CDN upload failed', ['response' => $response->body()]);
+                return back()->withErrors(['image_url' => 'Failed to upload image to CDN.']);
+            }
+
+            // $cdnUrl = $response->json('url');
+            $imageCdnFilePath = $response->json('filePath');
+        }
+
         // Save to database
         VehicleSeries::create([
+            'image_url' => $imageCdnFilePath,
             'maker_id' => $maker->id,
             'type_id' => $type->id,
             'slug' => $slug,
@@ -101,6 +130,7 @@ class VehicleSeriesController extends Controller
         $series = VehicleSeries::findOrFail($id);
 
         $validated = $request->validate([
+            'image_url' => ['sometimes', 'image', 'max:2048'],
             'maker_id' => ['required', 'exists:vehicle_makers,id'],
             'type_id'  => ['required', 'exists:vehicle_types,id'],
             'name'     => [
@@ -135,8 +165,35 @@ class VehicleSeriesController extends Controller
             $series->slug = $this->generateUniqueSlug($baseSlug, $series->id);
         }
 
+        $settings = SettingHelper::getDefaultSettings();
+        $imageCdnFilePath = $series->image_url ?? null;
+
+        if ($request->hasFile('image_url')) {
+            $file = $request->file('image_url');
+            $folder = 'acauto/series';
+
+            // Send POST request to CDN API
+            $response = Http::attach(
+                'file',
+                file_get_contents($file->getRealPath()),
+                $file->getClientOriginalName()
+            )->withHeaders([
+                'Authorization' => $settings->cdn_api_token,
+                $settings->cdn_service_code_key => $settings->cdn_service_code_value,
+            ])->post($settings->upload_api_url . '/api/upload/single?folder=' . $folder);
+
+            if (!$response->successful() || !$response->json('success')) {
+                \Log::error('CDN upload failed', ['response' => $response->body()]);
+                return back()->withErrors(['image_url' => 'Failed to upload image to CDN.']);
+            }
+
+            // $cdnUrl = $response->json('url');
+            $imageCdnFilePath = $response->json('filePath');
+        }
+
         $series->is_global_model = (int) $request->is_global_model ?? 0;
         $series->is_local_model = (int) $request->is_local_model ?? 0;
+        $validated['image_url'] = $imageCdnFilePath;
         $series->update($validated);
 
         return redirect()->route('cars.series.index')->with('success', 'Item updated successfully!');

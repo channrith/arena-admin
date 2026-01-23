@@ -54,7 +54,7 @@ class VehicleTypeController extends Controller
 
             if (!$response->successful() || !$response->json('success')) {
                 \Log::error('CDN upload failed', ['response' => $response->body()]);
-                return back()->withErrors(['icon_url' => 'Failed to upload logo to CDN.']);
+                return back()->withErrors(['icon_url' => 'Failed to upload icon to CDN.']);
             }
 
             // $cdnUrl = $response->json('url');

@@ -7,7 +7,6 @@
 
 {{-- Content body --}}
 @section('content_body')
-<!-- resources/views/posts/edit.blade.php -->
 <form action="{{ route('cars.types.update', $vehicleType->id) }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
