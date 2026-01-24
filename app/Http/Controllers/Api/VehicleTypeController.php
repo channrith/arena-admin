@@ -15,8 +15,10 @@ class VehicleTypeController extends Controller
      */
     public function index(Request $request)
     {
-        $limit = (int) $request->query('limit', 10);
+        $limit = (int) $request->query('limit', 3);
         $includeSeries = in_array('series', explode(',', (string) $request->query('include')));
+
+        $isGlobal = $request->query('is_global_model');
 
         $makerSlug = $request->query('maker');
         $makerId = null;
@@ -33,11 +35,17 @@ class VehicleTypeController extends Controller
             ->orderBy('sequence');
 
         if ($includeSeries) {
-            $query->with(['series' => function ($q) use ($makerId) {
+            $query->with(['series' => function ($q) use ($makerId, $isGlobal) {
                 $q->orderBy('name');
 
                 if ($makerId) {
                     $q->where('maker_id', $makerId);
+                }
+
+                if ($isGlobal) {
+                    $q->where('is_global_model', (int) $isGlobal);
+                } else {
+                    $q->where('is_local_model', 1);
                 }
             }]);
         }

@@ -6,6 +6,7 @@ use App\Helpers\SettingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\VehicleMaker;
 use App\Models\VehicleModel;
+use App\Models\VehicleSeries;
 use Illuminate\Http\Request;
 
 class CarModelController extends Controller
@@ -15,6 +16,33 @@ class CarModelController extends Controller
     {
         $settings = SettingHelper::getDefaultSettings();
         $this->settings = $settings;
+    }
+
+    public function indexBySeries(Request $request, $series)
+    {
+        $seriesRecord = VehicleSeries::where('slug', $series)->first();
+
+        if (!$seriesRecord) {
+            return response()->json(['message' => 'Vehicle series not found'], 404);
+        }
+
+        $isGlobal = $request->query('is_global_model');
+
+        $query = VehicleModel::where('series_id', $seriesRecord->id)
+            ->with('maker:id,name,slug')->orderBy('slug');
+
+        // Apply filter if provided
+        if ($isGlobal) {
+            $query->where('is_global_model', (int) $isGlobal);
+        } else {
+            $query->where('is_local_model', 1);
+        }
+
+        // Paginate results (default 10 per page)
+        $models = $query->orderBy('name')
+            ->paginate($request->get('per_page', 15));
+
+        return response()->json($models);
     }
 
     public function indexByMaker(Request $request, $maker)
