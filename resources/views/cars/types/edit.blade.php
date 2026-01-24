@@ -73,7 +73,7 @@
                 <!-- Card Body -->
                 <div class="card-body">
                     <div class="form-group">
-                        <label for="image_url">Upload Image (600x300px)</label>
+                        <label for="image_url">Upload Image (600x320px)</label>
                         <div class="custom-file">
                             <input
                                 type="file"
