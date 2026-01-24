@@ -33,6 +33,7 @@
                     <thead>
                         <tr>
                             <th>No</th>
+                            <th></th>
                             <th>Name</th>
                             <th>Item Ordering</th>
                             <th></th>
@@ -42,6 +43,10 @@
                         @foreach ($vehicles as $key => $vehicle)
                         <tr>
                             <td>{{$key + 1}}</td>
+                            <td><img src="{{ $vehicle->image_url }}"
+                                    alt="Feature Image"
+                                    class="img-fluid rounded"
+                                    style="max-height: 50px;"></td>
                             <td>{{ $vehicle->name }}</td>
                             <td>{{ $vehicle->sequence }}</td>
                             <td class="project-actions text-right">

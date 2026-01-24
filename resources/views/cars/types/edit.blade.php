@@ -88,10 +88,10 @@
                         </div>
 
                         {{-- Show current image preview --}}
-                        @if($vehicleType->icon_url)
+                        @if($vehicleType->image_url)
                         <div class="mt-3">
                             <p>Current Image:</p>
-                            <img src="{{ $vehicleType->icon_url }}"
+                            <img src="{{ $vehicleType->image_url }}"
                                 alt="Feature Image"
                                 class="img-fluid rounded"
                                 style="max-height: 200px;">
