@@ -43,7 +43,7 @@
                         @foreach ($vehicles as $key => $vehicle)
                         <tr>
                             <td>{{$key + 1}}</td>
-                            <td><img src="{{ $vehicle->image_url }}"
+                            <td><img src="{{ $vehicle->feature_image_url }}"
                                     alt="Feature Image"
                                     class="img-fluid rounded"
                                     style="max-height: 50px;"></td>
