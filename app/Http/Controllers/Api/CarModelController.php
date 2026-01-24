@@ -31,8 +31,10 @@ class CarModelController extends Controller
             ->with('maker:id,name,slug')->orderBy('slug');
 
         // Apply filter if provided
-        if ($isGlobal !== null) {
+        if ($isGlobal) {
             $query->where('is_global_model', (int) $isGlobal);
+        } else {
+            $query->where('is_local_model', 1);
         }
 
         // Paginate results (default 10 per page)
