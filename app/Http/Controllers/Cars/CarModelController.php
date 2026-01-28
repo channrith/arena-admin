@@ -173,6 +173,9 @@ class CarModelController extends Controller
             // 'series_id' => ['required', 'exists:vehicle_series,id'],
             'series_id' => ['nullable'],
             'year_of_production' => ['nullable'],
+            'specs' => ['sometimes', 'array'],
+            'specs.*.*.id' => ['nullable', 'integer', 'exists:vehicle_specs,id'],
+            'specs.*.*.label' => ['required_with:specs.*.*.id', 'string', 'max:255'],
         ]);
 
         $model = VehicleModel::findOrFail($id);
