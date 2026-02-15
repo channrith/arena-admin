@@ -27,9 +27,10 @@ class CarModelController extends Controller
         }
 
         $isGlobal = $request->query('is_global_model');
+        $perPage = $request->get('per_page', 2); // default 2 years per page
 
-        $query = VehicleModel::where('series_id', $seriesRecord->id)
-            ->with('maker:id,name,slug')->orderBy('slug');
+        // Base query for filtering
+        $query = VehicleModel::where('series_id', $seriesRecord->id);
 
         // Apply filter if provided
         if ($isGlobal) {
@@ -38,11 +39,44 @@ class CarModelController extends Controller
             $query->where('is_local_model', 1);
         }
 
-        // Paginate results (default 10 per page)
-        $models = $query->orderBy('name')
-            ->paginate($request->get('per_page', 15));
+        // Step 1: Get distinct production years
+        $yearsQuery = (clone $query)
+            ->select('year_of_production')
+            ->distinct()
+            ->orderBy('year_of_production', 'desc');
 
-        return response()->json($models);
+        $paginatedYears = $yearsQuery->paginate($perPage);
+
+        $years = $paginatedYears->pluck('year_of_production');
+
+        // Step 2: Get models only for those paginated years
+        $models = (clone $query)
+            ->with('maker:id,name,slug')
+            ->whereIn('year_of_production', $years)
+            ->orderBy('year_of_production', 'desc')
+            ->orderBy('name')
+            ->get();
+
+        // Step 3: Group models by year
+        $grouped = $models->groupBy('year_of_production')
+            ->map(function ($items, $year) {
+                return [
+                    'year' => $year,
+                    'models' => $items->values()
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'series' => $seriesRecord->name,
+            'pagination' => [
+                'current_page' => $paginatedYears->currentPage(),
+                'last_page' => $paginatedYears->lastPage(),
+                'per_page' => $paginatedYears->perPage(),
+                'total_years' => $paginatedYears->total(),
+            ],
+            'data' => $grouped
+        ]);
     }
 
     public function indexByMaker(Request $request, $maker)
