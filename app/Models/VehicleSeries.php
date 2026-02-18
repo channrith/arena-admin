@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Helpers\SettingHelper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class VehicleSeries extends Model
 {
+    protected $appends = ['feature_image_url'];
+
     protected $fillable = [
         'maker_id',
         'type_id',
@@ -39,6 +42,18 @@ class VehicleSeries extends Model
         }
 
         return $slug;
+    }
+
+    public function getFeatureImageUrlAttribute()
+    {
+        $settings = SettingHelper::getDefaultSettings();
+
+        if (!$this->image_url) {
+            return null;
+        }
+
+        // Ensure no double slashes
+        return rtrim($settings->cdn_url ?? $settings->upload_api_url, '/') . '/' . ltrim($this->image_url, '/');
     }
 
     public function maker()
