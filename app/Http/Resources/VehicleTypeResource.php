@@ -15,11 +15,12 @@ class VehicleTypeResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'       => $this->id,
-            'name'     => $this->name,
-            'slug'     => $this->slug,
-            'sequence' => (int) $this->sequence,
-            'icon_url' => $this->icon_url,
+            'id'                => $this->id,
+            'name'              => $this->name,
+            'slug'              => $this->slug,
+            'sequence'          => (int) $this->sequence,
+            'icon_url'          => $this->icon_url,
+            'feature_image_url' => $this->feature_image_url,
 
             // only included if relationship was eager-loaded
             'series'   => VehicleSeriesResource::collection(
