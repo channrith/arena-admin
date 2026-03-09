@@ -13,314 +13,314 @@ use Illuminate\Support\Facades\Http;
 
 class PostController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        $locale = app()->getLocale();
+  /**
+   * Display a listing of the resource.
+   */
+  public function index()
+  {
+    $locale = app()->getLocale();
 
-        $posts = Post::with([
-            'author:id,name',
-            'currentTranslation' => function ($query) use ($locale) {
-                $query->where('language_code', $locale)
-                    ->select('post_id', 'title', 'summary', 'feature_image', 'translator_name');
-            }
-        ])
-            ->select('id', 'author_id', 'source', 'status', 'is_special', 'published_at')
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+    $posts = Post::with([
+      'author:id,name',
+      'currentTranslation' => function ($query) use ($locale) {
+        $query->where('language_code', $locale)
+          ->select('post_id', 'title', 'summary', 'feature_image', 'translator_name');
+      }
+    ])
+      ->select('id', 'author_id', 'source', 'status', 'is_special', 'published_at')
+      ->orderBy('created_at', 'desc')
+      ->paginate(15);
 
-        return view('posts.index', compact('posts'));
+    return view('posts.index', compact('posts'));
+  }
+
+  /**
+   * Show the form for creating a new resource.
+   */
+  public function create()
+  {
+    $services = Service::select('id', 'code', 'description')->get();
+    return view('posts.add', compact('services'));
+  }
+
+  /**
+   * Store a newly created resource in storage.
+   */
+  public function store(Request $request)
+  {
+    $validated = $request->validate([
+      'feature_image' => ['sometimes', 'image', 'max:2048'],
+      'title' => ['required', 'string', 'max:255'],
+      'summary' => ['required', 'string', 'max:500'],
+      'content' => ['required', 'string'],
+      'source' => ['nullable', 'string'],
+      'translator_name' => ['nullable', 'string'],
+      'published_at' => ['nullable', 'string'],
+      'service_id'      => ['required', 'array'],              // must be an array
+      'service_id.*'    => ['integer', 'exists:services,id'],  // each item must be valid
+    ]);
+
+    $publishedAt = null;
+    if ($request->filled('published_at')) {
+      try {
+        $publishedAt = Carbon::createFromFormat('Y/m/d h:i A', $request->published_at);
+      } catch (\Exception $e) {
+        // If parsing fails, log it or handle gracefully
+        \Log::warning('Invalid published_at format', ['input' => $request->published_at]);
+      }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $services = Service::select('id', 'code', 'description')->get();
-        return view('posts.add', compact('services'));
+    $settings = SettingHelper::getDefaultSettings();
+    $cdnFilePath = null;
+    $mediaFileData = [];
+
+    $locale = app()->getLocale();
+
+    // Save to database
+    $post = Post::create([
+      'author_id' => auth()->id(),
+      'created_by' => auth()->id(),
+      'status' => $settings->is_enable_post_approval ? 'pending' : 'approved',
+      'source' => $request->source,
+      'published_at' => $publishedAt,
+      'is_special' => (int)$request->is_special,
+    ]);
+
+    $post->services()->sync($validated['service_id']);
+
+    if ($request->hasFile('feature_image')) {
+      // Handle file upload
+      $file = $request->file('feature_image');
+
+      // Generate date-based folder
+      $folder = now()->format('Y/m/d');
+
+      // Send POST request to CDN API
+      $response = Http::attach(
+        'file',
+        file_get_contents($file->getRealPath()),
+        $file->getClientOriginalName()
+      )->withHeaders([
+        'Authorization' => $settings->cdn_api_token,
+        $settings->cdn_service_code_key => $settings->cdn_service_code_value,
+      ])->post($settings->upload_api_url . '/api/upload/single?folder=' . $folder);
+
+      if (!$response->successful() || !$response->json('success')) {
+        \Log::error('CDN upload failed', ['response' => $response->body()]);
+        return back()->withErrors(['feature_image' => 'Failed to upload image to CDN.']);
+      }
+
+      // $cdnUrl = $response->json('url');
+      $cdnFilePath = $response->json('filePath');
+
+      $mediaFileData = [
+        'original_name' => $file->getClientOriginalName(),
+        'file_name' => $response->json('filename'),
+        'url' => $cdnFilePath,
+        'mime_type' => $file->getMimeType(),
+        'size' => $file->getSize(),
+        'category' => 'post_gallery',
+        'owner_type' => Post::class,
+        'owner_id' => $post->id,
+        'uploader_id' => auth()->id(),
+      ];
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'feature_image' => ['sometimes', 'image', 'max:2048'],
-            'title' => ['required', 'string', 'max:255'],
-            'summary' => ['required', 'string', 'max:500'],
-            'content' => ['required', 'string'],
-            'source' => ['nullable', 'string'],
-            'translator_name' => ['nullable', 'string'],
-            'published_at' => ['nullable', 'string'],
-            'service_id'      => ['required', 'array'],              // must be an array
-            'service_id.*'    => ['integer', 'exists:services,id'],  // each item must be valid
-        ]);
+    $post->translations()->create([
+      'language_code' => $locale,
+      'title' => $validated['title'],
+      'summary' => $validated['summary'],
+      'content' => $validated['content'],
+      'feature_image' => $cdnFilePath,
+      'slug' => \Str::slug($validated['title']),
+      'translator_name' => $request->translator_name,
+    ]);
 
-        $publishedAt = null;
-        if ($request->filled('published_at')) {
-            try {
-                $publishedAt = Carbon::createFromFormat('Y/m/d h:i A', $request->published_at);
-            } catch (\Exception $e) {
-                // If parsing fails, log it or handle gracefully
-                \Log::warning('Invalid published_at format', ['input' => $request->published_at]);
-            }
-        }
-
-        $settings = SettingHelper::getDefaultSettings();
-        $cdnFilePath = null;
-        $mediaFileData = [];
-
-        $locale = app()->getLocale();
-
-        // Save to database
-        $post = Post::create([
-            'author_id' => auth()->id(),
-            'created_by' => auth()->id(),
-            'status' => $settings->is_enable_post_approval ? 'pending' : 'approved',
-            'source' => $request->source,
-            'published_at' => $publishedAt,
-            'is_special' => (int)$request->is_special,
-        ]);
-
-        $post->services()->sync($validated['service_id']);
-
-        if ($request->hasFile('feature_image')) {
-            // Handle file upload
-            $file = $request->file('feature_image');
-
-            // Generate date-based folder
-            $folder = now()->format('Y/m/d');
-
-            // Send POST request to CDN API
-            $response = Http::attach(
-                'file',
-                file_get_contents($file->getRealPath()),
-                $file->getClientOriginalName()
-            )->withHeaders([
-                'Authorization' => $settings->cdn_api_token,
-                $settings->cdn_service_code_key => $settings->cdn_service_code_value,
-            ])->post($settings->upload_api_url . '/api/upload/single?folder=' . $folder);
-
-            if (!$response->successful() || !$response->json('success')) {
-                \Log::error('CDN upload failed', ['response' => $response->body()]);
-                return back()->withErrors(['feature_image' => 'Failed to upload image to CDN.']);
-            }
-
-            // $cdnUrl = $response->json('url');
-            $cdnFilePath = $response->json('filePath');
-
-            $mediaFileData = [
-                'original_name' => $file->getClientOriginalName(),
-                'file_name' => $response->json('filename'),
-                'url' => $cdnFilePath,
-                'mime_type' => $file->getMimeType(),
-                'size' => $file->getSize(),
-                'category' => 'post_gallery',
-                'owner_type' => Post::class,
-                'owner_id' => $post->id,
-                'uploader_id' => auth()->id(),
-            ];
-        }
-
-        $post->translations()->create([
-            'language_code' => $locale,
-            'title' => $validated['title'],
-            'summary' => $validated['summary'],
-            'content' => $validated['content'],
-            'feature_image' => $cdnFilePath,
-            'slug' => \Str::slug($validated['title']),
-            'translator_name' => $request->translator_name,
-        ]);
-
-        if ($mediaFileData) {
-            $mediaFileData['owner_id'] = $post->id;
-            MediaFile::create($mediaFileData);
-        }
-
-        if ($request->has('is_special')) {
-            $post->highlights()->create([
-                'type' => 'special',
-                'priority' => 1,
-                'created_by' => auth()->id(),
-            ]);
-        }
-
-        return redirect()->route('posts.index')->with('success', 'Post created successfully!');
+    if ($mediaFileData) {
+      $mediaFileData['owner_id'] = $post->id;
+      MediaFile::create($mediaFileData);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        $locale = app()->getLocale();
-
-        $post = Post::with([
-            'author:id,name',
-            'services:id,code,description',
-            'currentTranslation' => function ($query) use ($locale) {
-                $query->where('language_code', $locale)
-                    ->select('post_id', 'title', 'summary', 'content', 'feature_image', 'translator_name');
-            }
-        ])
-            ->select('id', 'author_id', 'source', 'status', 'is_special', 'published_at')
-            ->findOrFail($id);
-
-
-        // For simplicity, merge translation attributes directly if available
-        if ($post->currentTranslation) {
-            $settings = SettingHelper::getDefaultSettings();
-
-            $post->title = $post->currentTranslation->title;
-            $post->summary = $post->currentTranslation->summary;
-            $post->content = $post->currentTranslation->content ?? '';
-            $post->feature_image = $post->currentTranslation->feature_image ?? '';
-            $post->translator_name = $post->currentTranslation->translator_name;
-        }
-
-        $services = Service::select('id', 'code', 'description')->get();
-
-        return view('posts.edit', compact('post', 'services'));
+    if ($request->has('is_special')) {
+      $post->highlights()->create([
+        'type' => 'special',
+        'priority' => 1,
+        'created_by' => auth()->id(),
+      ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        $post = Post::with('translations')->findOrFail($id);
+    return redirect()->route('posts.index')->with('success', 'Post created successfully!');
+  }
 
-        $validated = $request->validate([
-            'feature_image' => ['sometimes', 'image', 'max:2048'],
-            'title' => ['required', 'string', 'max:255'],
-            'summary' => ['required', 'string', 'max:500'],
-            'content' => ['required', 'string'],
-            'source' => ['nullable', 'string'],
-            'translator_name' => ['nullable', 'string'],
-            'published_at' => ['nullable', 'string'],
-            'service_id'      => ['required', 'array'],              // must be an array
-            'service_id.*'    => ['integer', 'exists:services,id'],  // each item must be valid
-        ]);
+  /**
+   * Show the form for editing the specified resource.
+   */
+  public function edit(string $id)
+  {
+    $locale = app()->getLocale();
 
-        $publishedAt = null;
-        if ($request->filled('published_at')) {
-            try {
-                $publishedAt = Carbon::createFromFormat('Y/m/d h:i A', $request->published_at);
-            } catch (\Exception $e) {
-                // If parsing fails, log it or handle gracefully
-                \Log::warning('Invalid published_at format', ['input' => $request->published_at]);
-            }
-        }
+    $post = Post::with([
+      'author:id,name',
+      'services:id,code,description',
+      'currentTranslation' => function ($query) use ($locale) {
+        $query->where('language_code', $locale)
+          ->select('post_id', 'title', 'summary', 'content', 'feature_image', 'translator_name');
+      }
+    ])
+      ->select('id', 'author_id', 'source', 'status', 'is_special', 'published_at')
+      ->findOrFail($id);
 
-        $settings = SettingHelper::getDefaultSettings();
-        $cdnFilePath = $post->currentTranslation->feature_image ?? null;
 
-        // Handle new image upload if provided
-        if ($request->hasFile('feature_image')) {
-            $file = $request->file('feature_image');
-            $folder = now()->format('Y/m/d');
+    // For simplicity, merge translation attributes directly if available
+    if ($post->currentTranslation) {
+      $settings = SettingHelper::getDefaultSettings();
 
-            $response = Http::attach(
-                'file',
-                file_get_contents($file->getRealPath()),
-                $file->getClientOriginalName()
-            )->withHeaders([
-                'Authorization' => $settings->cdn_api_token,
-                $settings->cdn_service_code_key => $settings->cdn_service_code_value,
-            ])->post($settings->upload_api_url . '/api/upload/single?folder=' . $folder);
-
-            if (!$response->successful() || !$response->json('success')) {
-                \Log::error('CDN upload failed during update', ['response' => $response->body()]);
-                return back()->withErrors(['feature_image' => 'Failed to upload image to CDN.']);
-            }
-
-            $cdnFilePath = $response->json('filePath');
-
-            // Store media record
-            MediaFile::create([
-                'original_name' => $file->getClientOriginalName(),
-                'file_name' => $response->json('filename'),
-                'url' => $cdnFilePath,
-                'mime_type' => $file->getMimeType(),
-                'size' => $file->getSize(),
-                'category' => 'post_gallery',
-                'owner_type' => Post::class,
-                'owner_id' => $post->id,
-                'uploader_id' => auth()->id(),
-            ]);
-        }
-
-        // Update main post fields
-        $post->update([
-            'status' => $settings->is_enable_post_approval ? 'pending' : 'approved',
-            'source' => $request->source,
-            'published_at' => $publishedAt,
-            'is_special' => (int)$request->is_special,
-        ]);
-
-        $post->services()->sync($validated['service_id']);
-
-        // Determine current locale translation
-        $locale = app()->getLocale();
-        $translation = $post->translations()
-            ->where('language_code', $locale)
-            ->first();
-
-        // Update or create translation
-        if ($translation) {
-            $translation->update([
-                'title' => $validated['title'],
-                'summary' => $validated['summary'],
-                'content' => $validated['content'],
-                'feature_image' => $cdnFilePath,
-                'slug' => \Str::slug($validated['title']),
-                'translator_name' => $request->translator_name,
-            ]);
-        } else {
-            $post->translations()->create([
-                'language_code' => $locale,
-                'title' => $validated['title'],
-                'summary' => $validated['summary'],
-                'content' => $validated['content'],
-                'feature_image' => $cdnFilePath,
-                'slug' => \Str::slug($validated['title']),
-                'translator_name' => $request->translator_name,
-            ]);
-        }
-
-        if ($request->has('is_special')) {
-            PostHighlight::updateOrCreate(
-                [
-                    'post_id' => $post->id,
-                    'type' => 'special',
-                ],
-                [
-                    'priority' => 1,
-                    'created_by' => auth()->id(),
-                ]
-            );
-        } else {
-            // Remove highlight if unchecked
-            PostHighlight::where('post_id', $post->id)
-                ->where('type', 'special')
-                ->delete();
-        }
-
-        return redirect()->route('posts.index')->with('success', 'Post updated successfully!');
+      $post->title = $post->currentTranslation->title;
+      $post->summary = $post->currentTranslation->summary;
+      $post->content = $post->currentTranslation->content ?? '';
+      $post->feature_image = $post->currentTranslation->feature_image ?? '';
+      $post->translator_name = $post->currentTranslation->translator_name;
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        $post = Post::findOrFail($id);
-        $post->delete();
+    $services = Service::select('id', 'code', 'description')->get();
 
-        return redirect()->route('posts.index')->with('success', 'Post deleted successfully!');
+    return view('posts.edit', compact('post', 'services'));
+  }
+
+  /**
+   * Update the specified resource in storage.
+   */
+  public function update(Request $request, string $id)
+  {
+    $post = Post::with('translations')->findOrFail($id);
+
+    $validated = $request->validate([
+      'feature_image' => ['sometimes', 'image', 'max:2048'],
+      'title' => ['required', 'string', 'max:255'],
+      'summary' => ['required', 'string', 'max:500'],
+      'content' => ['required', 'string'],
+      'source' => ['nullable', 'string'],
+      'translator_name' => ['nullable', 'string'],
+      'published_at' => ['nullable', 'string'],
+      'service_id'      => ['required', 'array'],              // must be an array
+      'service_id.*'    => ['integer', 'exists:services,id'],  // each item must be valid
+    ]);
+
+    $publishedAt = null;
+    if ($request->filled('published_at')) {
+      try {
+        $publishedAt = Carbon::createFromFormat('Y/m/d h:i A', $request->published_at);
+      } catch (\Exception $e) {
+        // If parsing fails, log it or handle gracefully
+        \Log::warning('Invalid published_at format', ['input' => $request->published_at]);
+      }
     }
+
+    $settings = SettingHelper::getDefaultSettings();
+    $cdnFilePath = $post->currentTranslation->feature_image ?? null;
+
+    // Handle new image upload if provided
+    if ($request->hasFile('feature_image')) {
+      $file = $request->file('feature_image');
+      $folder = now()->format('Y/m/d');
+
+      $response = Http::attach(
+        'file',
+        file_get_contents($file->getRealPath()),
+        $file->getClientOriginalName()
+      )->withHeaders([
+        'Authorization' => $settings->cdn_api_token,
+        $settings->cdn_service_code_key => $settings->cdn_service_code_value,
+      ])->post($settings->upload_api_url . '/api/upload/single?folder=' . $folder);
+
+      if (!$response->successful() || !$response->json('success')) {
+        \Log::error('CDN upload failed during update', ['response' => $response->body()]);
+        return back()->withErrors(['feature_image' => 'Failed to upload image to CDN.']);
+      }
+
+      $cdnFilePath = $response->json('filePath');
+
+      // Store media record
+      MediaFile::create([
+        'original_name' => $file->getClientOriginalName(),
+        'file_name' => $response->json('filename'),
+        'url' => $cdnFilePath,
+        'mime_type' => $file->getMimeType(),
+        'size' => $file->getSize(),
+        'category' => 'post_gallery',
+        'owner_type' => Post::class,
+        'owner_id' => $post->id,
+        'uploader_id' => auth()->id(),
+      ]);
+    }
+
+    // Update main post fields
+    $post->update([
+      'status' => $settings->is_enable_post_approval ? 'pending' : 'approved',
+      'source' => $request->source,
+      'published_at' => $publishedAt,
+      'is_special' => (int)$request->is_special,
+    ]);
+
+    $post->services()->sync($validated['service_id']);
+
+    // Determine current locale translation
+    $locale = app()->getLocale();
+    $translation = $post->translations()
+      ->where('language_code', $locale)
+      ->first();
+
+    // Update or create translation
+    if ($translation) {
+      $translation->update([
+        'title' => $validated['title'],
+        'summary' => $validated['summary'],
+        'content' => $validated['content'],
+        'feature_image' => $cdnFilePath,
+        'slug' => \Str::slug($validated['title']),
+        'translator_name' => $request->translator_name,
+      ]);
+    } else {
+      $post->translations()->create([
+        'language_code' => $locale,
+        'title' => $validated['title'],
+        'summary' => $validated['summary'],
+        'content' => $validated['content'],
+        'feature_image' => $cdnFilePath,
+        'slug' => \Str::slug($validated['title']),
+        'translator_name' => $request->translator_name,
+      ]);
+    }
+
+    if ($request->has('is_special')) {
+      PostHighlight::updateOrCreate(
+        [
+          'post_id' => $post->id,
+          'type' => 'special',
+        ],
+        [
+          'priority' => 1,
+          'created_by' => auth()->id(),
+        ]
+      );
+    } else {
+      // Remove highlight if unchecked
+      PostHighlight::where('post_id', $post->id)
+        ->where('type', 'special')
+        ->delete();
+    }
+
+    return redirect()->route('posts.index')->with('success', 'Post updated successfully!');
+  }
+
+  /**
+   * Remove the specified resource from storage.
+   */
+  public function destroy(string $id)
+  {
+    $post = Post::findOrFail($id);
+    $post->delete();
+
+    return redirect()->route('posts.index')->with('success', 'Post deleted successfully!');
+  }
 }
