@@ -8,22 +8,22 @@ use Illuminate\Http\Request;
 
 class PosterController extends Controller
 {
-    public function index(Request $request)
-    {
-        $categories = PosterCategory::with([
-            'posters' => function ($q) {
-                $q->orderBy('sequence');
-            }
-        ])
-            ->orderBy('id')
-            ->get();
+  public function index(Request $request)
+  {
+    $categories = PosterCategory::with([
+      'posters' => function ($q) {
+        $q->orderBy('sequence');
+      }
+    ])
+      ->orderBy('id')
+      ->get();
 
-        $result = [];
+    $result = [];
 
-        foreach ($categories as $category) {
-            $result[$category->remark] = $category->posters;
-        }
-
-        return response()->json($result);
+    foreach ($categories as $category) {
+      $result[$category->remark] = $category->posters;
     }
+
+    return response()->json($result);
+  }
 }

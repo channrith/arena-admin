@@ -7,25 +7,25 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class VehicleTypeResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(Request $request): array
-    {
-        return [
-            'id'                => $this->id,
-            'name'              => $this->name,
-            'slug'              => $this->slug,
-            'sequence'          => (int) $this->sequence,
-            'icon_url'          => $this->icon_url,
-            'feature_image_url' => $this->feature_image_url,
+  /**
+   * Transform the resource into an array.
+   *
+   * @return array<string, mixed>
+   */
+  public function toArray(Request $request): array
+  {
+    return [
+      'id'                => $this->id,
+      'name'              => $this->name,
+      'slug'              => $this->slug,
+      'sequence'          => (int) $this->sequence,
+      'icon_url'          => $this->icon_url,
+      'feature_image_url' => $this->feature_image_url,
 
-            // only included if relationship was eager-loaded
-            'series'   => VehicleSeriesResource::collection(
-                $this->whenLoaded('series')
-            ),
-        ];
-    }
+      // only included if relationship was eager-loaded
+      'series'   => VehicleSeriesResource::collection(
+        $this->whenLoaded('series')
+      ),
+    ];
+  }
 }

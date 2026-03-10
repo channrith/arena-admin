@@ -12,14 +12,14 @@
 @section('content_header')
 @hasSection('content_header_title')
 <h1 class="text-muted">
-    @yield('content_header_title')
+  @yield('content_header_title')
 
-    @hasSection('content_header_subtitle')
-    <small class="text-dark">
-        <i class="fas fa-xs fa-angle-right text-muted"></i>
-        @yield('content_header_subtitle')
-    </small>
-    @endif
+  @hasSection('content_header_subtitle')
+  <small class="text-dark">
+    <i class="fas fa-xs fa-angle-right text-muted"></i>
+    @yield('content_header_subtitle')
+  </small>
+  @endif
 </h1>
 @endif
 @stop
@@ -34,13 +34,13 @@
 
 @section('footer')
 <div class="float-right">
-    Version: {{ config('app.version', '1.0.0') }}
+  Version: {{ config('app.version', '1.0.0') }}
 </div>
 
 <strong>
-    <a href="{{ config('app.company_url', '#') }}">
-        {{ config('app.company_name', 'Arena Cambodia Auto') }}
-    </a>
+  <a href="{{ config('app.company_url', '#') }}">
+    {{ config('app.company_name', 'Arena Cambodia Auto') }}
+  </a>
 </strong>
 @stop
 
@@ -49,23 +49,23 @@
 @push('js')
 <script src="/plugins/toastr/toastr.min.js"></script>
 <script>
-    $(document).ready(function() {
-        @if(session('success'))
-        toastr.success("{{ session('success') }}");
-        @endif
+  $(document).ready(function() {
+    @if(session('success'))
+    toastr.success("{{ session('success') }}");
+    @endif
 
-        @if(session('error'))
-        toastr.error("{{ session('error') }}");
-        @endif
+    @if(session('error'))
+    toastr.error("{{ session('error') }}");
+    @endif
 
-        @if(session('warning'))
-        toastr.warning("{{ session('warning') }}");
-        @endif
+    @if(session('warning'))
+    toastr.warning("{{ session('warning') }}");
+    @endif
 
-        @if(session('info'))
-        toastr.info("{{ session('info') }}");
-        @endif
-    });
+    @if(session('info'))
+    toastr.info("{{ session('info') }}");
+    @endif
+  });
 </script>
 @endpush
 

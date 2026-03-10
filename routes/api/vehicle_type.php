@@ -5,7 +5,7 @@ use App\Http\Middleware\ApiVehicleToken;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware([ApiVehicleToken::class])
-    ->prefix('vehicle-types')
-    ->group(function () {
-        Route::get('/', [VehicleTypeController::class, 'index']);
-    });
+  ->prefix('vehicle-types')
+  ->group(function () {
+    Route::get('/', [VehicleTypeController::class, 'index']);
+  });

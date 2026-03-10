@@ -8,55 +8,55 @@ use Illuminate\Http\Request;
 
 class VehicleMakerController extends Controller
 {
-    public function index(Request $request)
-    {
-        $limit = $request->query('limit');
+  public function index(Request $request)
+  {
+    $limit = $request->query('limit');
 
-        $query = VehicleMaker::query()
-            ->select(
-                'id',
-                'name',
-                'slug',
-                'logo_url',
-                'banner_url',
-                'description',
-                'sequence'
-            )
-            ->orderBy('sequence', 'asc')
-            ->orderBy('name', 'asc');
+    $query = VehicleMaker::query()
+      ->select(
+        'id',
+        'name',
+        'slug',
+        'logo_url',
+        'banner_url',
+        'description',
+        'sequence'
+      )
+      ->orderBy('sequence', 'asc')
+      ->orderBy('name', 'asc');
 
-        if ($limit && is_numeric($limit)) {
-            $query->limit((int) $limit);
-        }
-
-        $makers = $query->get();
-
-        return response()->json([
-            'data' => $makers,
-            'total' => $makers->count(),
-        ]);
+    if ($limit && is_numeric($limit)) {
+      $query->limit((int) $limit);
     }
 
-    public function showBySlug($slug)
-    {
-        $maker = VehicleMaker::select(
-            'id',
-            'name',
-            'slug',
-            'logo_url',
-            'banner_url',
-            'description',
-            'sequence'
-        )
-            ->where('slug', $slug)
-            ->first();
+    $makers = $query->get();
 
-        if (!$maker) {
-            return response()->json([
-                'message' => 'Vehicle maker not found.'
-            ], 404);
-        }
+    return response()->json([
+      'data' => $makers,
+      'total' => $makers->count(),
+    ]);
+  }
 
-        return response()->json($maker);
+  public function showBySlug($slug)
+  {
+    $maker = VehicleMaker::select(
+      'id',
+      'name',
+      'slug',
+      'logo_url',
+      'banner_url',
+      'description',
+      'sequence'
+    )
+      ->where('slug', $slug)
+      ->first();
+
+    if (!$maker) {
+      return response()->json([
+        'message' => 'Vehicle maker not found.'
+      ], 404);
     }
+
+    return response()->json($maker);
+  }
 }

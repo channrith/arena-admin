@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class VideoService extends Model
 {
-    protected $table = 'video_service';
+  protected $table = 'video_service';
 
-    protected $fillable = [
-        'video_id',
-        'service_id',
-    ];
+  protected $fillable = [
+    'video_id',
+    'service_id',
+  ];
 
-    public $timestamps = false;
+  public $timestamps = false;
 }

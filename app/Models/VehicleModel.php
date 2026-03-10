@@ -7,107 +7,107 @@ use Illuminate\Database\Eloquent\Model;
 
 class VehicleModel extends Model
 {
-    protected $fillable = [
-        'maker_id',
-        'series_id',
-        'name',
-        'slug',
-        'is_global_model',
-        'is_local_model',
-        'year_of_production',
-        'image_url',
-        'thumbnail_image',
-    ];
+  protected $fillable = [
+    'maker_id',
+    'series_id',
+    'name',
+    'slug',
+    'is_global_model',
+    'is_local_model',
+    'year_of_production',
+    'image_url',
+    'thumbnail_image',
+  ];
 
-    protected $appends = ['feature_image_url', 'thumbnail_image_url']; // include in JSON output
+  protected $appends = ['feature_image_url', 'thumbnail_image_url']; // include in JSON output
 
-    public function getThumbnailImageUrlAttribute()
-    {
-        $settings = SettingHelper::getDefaultSettings();
+  public function getThumbnailImageUrlAttribute()
+  {
+    $settings = SettingHelper::getDefaultSettings();
 
-        if (!$this->thumbnail_image) {
-            return null;
-        }
-
-        // Ensure no double slashes
-        return rtrim($settings->cdn_url ?? $settings->upload_api_url, '/') . '/' . ltrim($this->thumbnail_image, '/');
+    if (!$this->thumbnail_image) {
+      return null;
     }
 
-    public function getFeatureImageUrlAttribute()
-    {
-        $settings = SettingHelper::getDefaultSettings();
+    // Ensure no double slashes
+    return rtrim($settings->cdn_url ?? $settings->upload_api_url, '/') . '/' . ltrim($this->thumbnail_image, '/');
+  }
 
-        if (!$this->image_url) {
-            return null;
-        }
+  public function getFeatureImageUrlAttribute()
+  {
+    $settings = SettingHelper::getDefaultSettings();
 
-        // Ensure no double slashes
-        return rtrim($settings->cdn_url ?? $settings->upload_api_url, '/') . '/' . ltrim($this->image_url, '/');
+    if (!$this->image_url) {
+      return null;
     }
 
-    public static function generateUniqueSlug(string $name, $ignoreId = null)
-    {
-        $baseSlug = \Str::slug($name);
-        $slug = $baseSlug;
-        $counter = 1;
+    // Ensure no double slashes
+    return rtrim($settings->cdn_url ?? $settings->upload_api_url, '/') . '/' . ltrim($this->image_url, '/');
+  }
 
-        $query = static::where('slug', $slug);
-        if ($ignoreId) {
-            $query->where('id', '!=', $ignoreId);
-        }
+  public static function generateUniqueSlug(string $name, $ignoreId = null)
+  {
+    $baseSlug = \Str::slug($name);
+    $slug = $baseSlug;
+    $counter = 1;
 
-        while ($query->exists()) {
-            $slug = "{$baseSlug}-{$counter}";
-            $counter++;
-            $query = static::where('slug', $slug);
-            if ($ignoreId) {
-                $query->where('id', '!=', $ignoreId);
-            }
-        }
-
-        return $slug;
+    $query = static::where('slug', $slug);
+    if ($ignoreId) {
+      $query->where('id', '!=', $ignoreId);
     }
 
-    public function maker()
-    {
-        return $this->belongsTo(VehicleMaker::class, 'maker_id');
+    while ($query->exists()) {
+      $slug = "{$baseSlug}-{$counter}";
+      $counter++;
+      $query = static::where('slug', $slug);
+      if ($ignoreId) {
+        $query->where('id', '!=', $ignoreId);
+      }
     }
 
-    public function series()
-    {
-        return $this->belongsTo(VehicleSeries::class, 'series_id');
-    }
+    return $slug;
+  }
 
-    // Convenience: access type directly (VehicleModel → Series → Type)
-    public function type()
-    {
-        return $this->hasOneThrough(
-            VehicleType::class,
-            VehicleSeries::class,
-            'id',        // Foreign key on vehicle_series
-            'id',        // Foreign key on vehicle_types
-            'series_id', // Local key on vehicle_models
-            'type_id'    // Local key on vehicle_series
-        );
-    }
+  public function maker()
+  {
+    return $this->belongsTo(VehicleMaker::class, 'maker_id');
+  }
 
-    public function images()
-    {
-        return $this->hasMany(VehicleModelImage::class, 'model_id');
-    }
+  public function series()
+  {
+    return $this->belongsTo(VehicleSeries::class, 'series_id');
+  }
 
-    public function colors()
-    {
-        return $this->hasMany(VehicleModelColor::class, 'model_id');
-    }
+  // Convenience: access type directly (VehicleModel → Series → Type)
+  public function type()
+  {
+    return $this->hasOneThrough(
+      VehicleType::class,
+      VehicleSeries::class,
+      'id',        // Foreign key on vehicle_series
+      'id',        // Foreign key on vehicle_types
+      'series_id', // Local key on vehicle_models
+      'type_id'    // Local key on vehicle_series
+    );
+  }
 
-    public function specCategories()
-    {
-        return $this->hasMany(VehicleSpecCategory::class, 'model_id');
-    }
+  public function images()
+  {
+    return $this->hasMany(VehicleModelImage::class, 'model_id');
+  }
 
-    public function specs()
-    {
-        return $this->hasMany(VehicleSpec::class, 'model_id');
-    }
+  public function colors()
+  {
+    return $this->hasMany(VehicleModelColor::class, 'model_id');
+  }
+
+  public function specCategories()
+  {
+    return $this->hasMany(VehicleSpecCategory::class, 'model_id');
+  }
+
+  public function specs()
+  {
+    return $this->hasMany(VehicleSpec::class, 'model_id');
+  }
 }

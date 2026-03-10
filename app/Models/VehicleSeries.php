@@ -8,66 +8,66 @@ use Illuminate\Support\Str;
 
 class VehicleSeries extends Model
 {
-    protected $appends = ['feature_image_url'];
+  protected $appends = ['feature_image_url'];
 
-    protected $fillable = [
-        'maker_id',
-        'type_id',
-        'image_url',
-        'name',
-        'slug',
-        'is_global_model',
-        'is_local_model',
-    ];
+  protected $fillable = [
+    'maker_id',
+    'type_id',
+    'image_url',
+    'name',
+    'slug',
+    'is_global_model',
+    'is_local_model',
+  ];
 
-    public static function generateUniqueSlug(string $name, $makerId, $ignoreId = null)
-    {
-        $baseSlug = Str::slug($name);
-        $slug = $baseSlug;
-        $counter = 1;
+  public static function generateUniqueSlug(string $name, $makerId, $ignoreId = null)
+  {
+    $baseSlug = Str::slug($name);
+    $slug = $baseSlug;
+    $counter = 1;
 
-        $query = static::where('maker_id', $makerId)->where('slug', $slug);
-        if ($ignoreId) {
-            $query->where('id', '!=', $ignoreId);
-        }
-
-        while ($query->exists()) {
-            $slug = "{$baseSlug}-{$counter}";
-            $counter++;
-
-            $query = static::where('maker_id', $makerId)->where('slug', $slug);
-            if ($ignoreId) {
-                $query->where('id', '!=', $ignoreId);
-            }
-        }
-
-        return $slug;
+    $query = static::where('maker_id', $makerId)->where('slug', $slug);
+    if ($ignoreId) {
+      $query->where('id', '!=', $ignoreId);
     }
 
-    public function getFeatureImageUrlAttribute()
-    {
-        $settings = SettingHelper::getDefaultSettings();
+    while ($query->exists()) {
+      $slug = "{$baseSlug}-{$counter}";
+      $counter++;
 
-        if (!$this->image_url) {
-            return null;
-        }
-
-        // Ensure no double slashes
-        return rtrim($settings->cdn_url ?? $settings->upload_api_url, '/') . '/' . ltrim($this->image_url, '/');
+      $query = static::where('maker_id', $makerId)->where('slug', $slug);
+      if ($ignoreId) {
+        $query->where('id', '!=', $ignoreId);
+      }
     }
 
-    public function maker()
-    {
-        return $this->belongsTo(VehicleMaker::class, 'maker_id');
+    return $slug;
+  }
+
+  public function getFeatureImageUrlAttribute()
+  {
+    $settings = SettingHelper::getDefaultSettings();
+
+    if (!$this->image_url) {
+      return null;
     }
 
-    public function type()
-    {
-        return $this->belongsTo(VehicleType::class, 'type_id');
-    }
+    // Ensure no double slashes
+    return rtrim($settings->cdn_url ?? $settings->upload_api_url, '/') . '/' . ltrim($this->image_url, '/');
+  }
 
-    public function models()
-    {
-        return $this->hasMany(VehicleModel::class, 'series_id');
-    }
+  public function maker()
+  {
+    return $this->belongsTo(VehicleMaker::class, 'maker_id');
+  }
+
+  public function type()
+  {
+    return $this->belongsTo(VehicleType::class, 'type_id');
+  }
+
+  public function models()
+  {
+    return $this->hasMany(VehicleModel::class, 'series_id');
+  }
 }

@@ -6,33 +6,33 @@ use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
 {
-    protected $fillable = [
-        'code',
-        'description',
-    ];
+  protected $fillable = [
+    'code',
+    'description',
+  ];
 
-    public function models()
-    {
-        return $this->hasMany(VehicleMaker::class, 'service_id');
-    }
+  public function models()
+  {
+    return $this->hasMany(VehicleMaker::class, 'service_id');
+  }
 
-    public function posters()
-    {
-        return $this->hasMany(Poster::class, 'service_id');
-    }
+  public function posters()
+  {
+    return $this->hasMany(Poster::class, 'service_id');
+  }
 
-    public function posterCategories()
-    {
-        return $this->hasMany(PosterCategory::class, 'service_id');
-    }
+  public function posterCategories()
+  {
+    return $this->hasMany(PosterCategory::class, 'service_id');
+  }
 
-    public function posts()
-    {
-        return $this->belongsToMany(Post::class, 'post_service');
-    }
+  public function posts()
+  {
+    return $this->belongsToMany(Post::class, 'post_service');
+  }
 
-    public function videos()
-    {
-        return $this->belongsToMany(Video::class, 'video_service', 'service_id', 'video_id');
-    }
+  public function videos()
+  {
+    return $this->belongsToMany(Video::class, 'video_service', 'service_id', 'video_id');
+  }
 }

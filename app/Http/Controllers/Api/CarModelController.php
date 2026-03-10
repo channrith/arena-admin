@@ -11,184 +11,184 @@ use Illuminate\Http\Request;
 
 class CarModelController extends Controller
 {
-    protected $settings;
-    public function __construct()
-    {
-        $settings = SettingHelper::getDefaultSettings();
-        $this->settings = $settings;
+  protected $settings;
+  public function __construct()
+  {
+    $settings = SettingHelper::getDefaultSettings();
+    $this->settings = $settings;
+  }
+
+  public function indexBySeries(Request $request, $series)
+  {
+    $seriesRecord = VehicleSeries::where('slug', $series)->first();
+
+    if (!$seriesRecord) {
+      return response()->json(['message' => 'Vehicle series not found'], 404);
     }
 
-    public function indexBySeries(Request $request, $series)
-    {
-        $seriesRecord = VehicleSeries::where('slug', $series)->first();
+    $isGlobal = $request->query('is_global_model');
+    $perPage = $request->get('per_page', 2); // default 2 years per page
 
-        if (!$seriesRecord) {
-            return response()->json(['message' => 'Vehicle series not found'], 404);
-        }
+    // Base query for filtering
+    $query = VehicleModel::where('series_id', $seriesRecord->id);
 
-        $isGlobal = $request->query('is_global_model');
-        $perPage = $request->get('per_page', 2); // default 2 years per page
-
-        // Base query for filtering
-        $query = VehicleModel::where('series_id', $seriesRecord->id);
-
-        // Apply filter if provided
-        if ($isGlobal) {
-            $query->where('is_global_model', (int) $isGlobal);
-        } else {
-            $query->where('is_local_model', 1);
-        }
-
-        // Step 1: Get distinct production years
-        $yearsQuery = (clone $query)
-            ->select('year_of_production')
-            ->distinct()
-            ->orderBy('year_of_production', 'desc');
-
-        $paginatedYears = $yearsQuery->paginate($perPage);
-
-        $years = $paginatedYears->pluck('year_of_production');
-
-        // Step 2: Get models only for those paginated years
-        $models = (clone $query)
-            ->with('maker:id,name,slug')
-            ->whereIn('year_of_production', $years)
-            ->orderBy('year_of_production', 'desc')
-            ->orderBy('name')
-            ->get();
-
-        // Step 3: Group models by year
-        $grouped = $models->groupBy('year_of_production')
-            ->map(function ($items, $year) {
-                return [
-                    'year' => $year,
-                    'models' => $items->values()
-                ];
-            })
-            ->values();
-
-        return response()->json([
-            'series' => $seriesRecord->name,
-            'pagination' => [
-                'current_page' => $paginatedYears->currentPage(),
-                'last_page' => $paginatedYears->lastPage(),
-                'per_page' => $paginatedYears->perPage(),
-                'total_years' => $paginatedYears->total(),
-            ],
-            'data' => $grouped
-        ]);
+    // Apply filter if provided
+    if ($isGlobal) {
+      $query->where('is_global_model', (int) $isGlobal);
+    } else {
+      $query->where('is_local_model', 1);
     }
 
-    public function indexByMaker(Request $request, $maker)
-    {
-        $makerRecord = VehicleMaker::where('slug', $maker)->first();
+    // Step 1: Get distinct production years
+    $yearsQuery = (clone $query)
+      ->select('year_of_production')
+      ->distinct()
+      ->orderBy('year_of_production', 'desc');
 
-        if (!$makerRecord) {
-            return response()->json(['message' => 'Vehicle maker not found'], 404);
-        }
+    $paginatedYears = $yearsQuery->paginate($perPage);
 
-        $isGlobal = $request->query('is_global_model');
+    $years = $paginatedYears->pluck('year_of_production');
 
-        $query = VehicleModel::where('maker_id', $makerRecord->id)
-            ->with('maker:id,name,slug')->orderBy('slug');
+    // Step 2: Get models only for those paginated years
+    $models = (clone $query)
+      ->with('maker:id,name,slug')
+      ->whereIn('year_of_production', $years)
+      ->orderBy('year_of_production', 'desc')
+      ->orderBy('name')
+      ->get();
 
-        // Apply filter if provided
-        if ($isGlobal) {
-            $query->where('is_global_model', (int) $isGlobal);
-        } else {
-            $query->where('is_local_model', 1);
-        }
-
-        // Paginate results (default 10 per page)
-        $models = $query->orderBy('name')
-            ->paginate($request->get('per_page', 15));
-
-        return response()->json($models);
-    }
-
-    public function search(Request $request)
-    {
-        $query = trim($request->get('q', ''));
-
-        if (empty($query)) {
-            return response()->json(['message' => 'Search query required'], 400);
-        }
-
-        // Search vehicles by name or partial match
-        $vehicles = VehicleModel::with([
-            'maker:id,name,slug',
-            'specCategories.specs' // eager load categories + specs
-        ])
-            ->where('name', 'like', "%{$query}%")
-            ->orWhereHas('maker', function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%");
-            })
-            ->limit(5) // limit results for speed
-            ->get();
-
-        // Transform to expected output format
-        $results = $vehicles->map(function ($vehicle) {
-            return [
-                'id' => $vehicle->id,
-                'name' => $vehicle->name,
-                'image' => rtrim($this->settings->cdn_url ?? $this->settings->upload_api_url, '/') . '/' . ltrim($vehicle->thumbnail_image ?? $vehicle->image_url, '/'),
-                'options' => $vehicle->specCategories->map(function ($category) {
-                    return [
-                        'category' => trim($category->name . ' ' . ($category->name_kh ?? '')),
-                        'specs' => $category->specs->map(function ($spec) {
-                            return [
-                                'label' => trim($spec->label . ' ' . ($spec->label_kh ?? '')),
-                                'value' => $spec->value,
-                            ];
-                        }),
-                    ];
-                }),
-            ];
-        });
-
-        return response()->json($results);
-    }
-
-    public function getModelSpecs($modelId)
-    {
-        $model = VehicleModel::with([
-            'colors',
-            'images',
-            'specCategories.specs'
-        ])
-            ->findOrFail($modelId);
-
-        $response = [
-            'name' => $model->name,
-            'image' => rtrim($this->settings->cdn_url ?? $this->settings->upload_api_url, '/') . '/' . ltrim($model->image_url, '/'),
-            'features' => [
-                'colors' => $model->colors->map(function ($color) {
-                    return [
-                        'name' => $color->color_name,
-                        'code' => $color->color_hex,
-                        'image' => rtrim($this->settings->cdn_url ?? $this->settings->upload_api_url, '/') . '/' . ltrim($color->image_url, '/'),
-                    ];
-                })->values(),
-                'images' => $model->images->map(function ($image) {
-                    return [
-                        'alt' => $image->alt_text,
-                        'url' => rtrim($this->settings->cdn_url ?? $this->settings->upload_api_url, '/') . '/' . ltrim($image->image_url, '/'),
-                    ];
-                })->values(),
-            ],
-            'options' => $model->specCategories->map(function ($category) {
-                return [
-                    'category' => trim($category->name . ' ' . ($category->name_kh ?? '')),
-                    'specs' => $category->specs->map(function ($spec) {
-                        return [
-                            'label' => trim($spec->label . ' ' . ($spec->label_kh ?? '')),
-                            'value' => $spec->value,
-                        ];
-                    })->values(),
-                ];
-            })->values(),
+    // Step 3: Group models by year
+    $grouped = $models->groupBy('year_of_production')
+      ->map(function ($items, $year) {
+        return [
+          'year' => $year,
+          'models' => $items->values()
         ];
+      })
+      ->values();
 
-        return response()->json($response);
+    return response()->json([
+      'series' => $seriesRecord->name,
+      'pagination' => [
+        'current_page' => $paginatedYears->currentPage(),
+        'last_page' => $paginatedYears->lastPage(),
+        'per_page' => $paginatedYears->perPage(),
+        'total_years' => $paginatedYears->total(),
+      ],
+      'data' => $grouped
+    ]);
+  }
+
+  public function indexByMaker(Request $request, $maker)
+  {
+    $makerRecord = VehicleMaker::where('slug', $maker)->first();
+
+    if (!$makerRecord) {
+      return response()->json(['message' => 'Vehicle maker not found'], 404);
     }
+
+    $isGlobal = $request->query('is_global_model');
+
+    $query = VehicleModel::where('maker_id', $makerRecord->id)
+      ->with('maker:id,name,slug')->orderBy('slug');
+
+    // Apply filter if provided
+    if ($isGlobal) {
+      $query->where('is_global_model', (int) $isGlobal);
+    } else {
+      $query->where('is_local_model', 1);
+    }
+
+    // Paginate results (default 10 per page)
+    $models = $query->orderBy('name')
+      ->paginate($request->get('per_page', 15));
+
+    return response()->json($models);
+  }
+
+  public function search(Request $request)
+  {
+    $query = trim($request->get('q', ''));
+
+    if (empty($query)) {
+      return response()->json(['message' => 'Search query required'], 400);
+    }
+
+    // Search vehicles by name or partial match
+    $vehicles = VehicleModel::with([
+      'maker:id,name,slug',
+      'specCategories.specs' // eager load categories + specs
+    ])
+      ->where('name', 'like', "%{$query}%")
+      ->orWhereHas('maker', function ($q) use ($query) {
+        $q->where('name', 'like', "%{$query}%");
+      })
+      ->limit(5) // limit results for speed
+      ->get();
+
+    // Transform to expected output format
+    $results = $vehicles->map(function ($vehicle) {
+      return [
+        'id' => $vehicle->id,
+        'name' => $vehicle->name,
+        'image' => rtrim($this->settings->cdn_url ?? $this->settings->upload_api_url, '/') . '/' . ltrim($vehicle->thumbnail_image ?? $vehicle->image_url, '/'),
+        'options' => $vehicle->specCategories->map(function ($category) {
+          return [
+            'category' => trim($category->name . ' ' . ($category->name_kh ?? '')),
+            'specs' => $category->specs->map(function ($spec) {
+              return [
+                'label' => trim($spec->label . ' ' . ($spec->label_kh ?? '')),
+                'value' => $spec->value,
+              ];
+            }),
+          ];
+        }),
+      ];
+    });
+
+    return response()->json($results);
+  }
+
+  public function getModelSpecs($modelId)
+  {
+    $model = VehicleModel::with([
+      'colors',
+      'images',
+      'specCategories.specs'
+    ])
+      ->findOrFail($modelId);
+
+    $response = [
+      'name' => $model->name,
+      'image' => rtrim($this->settings->cdn_url ?? $this->settings->upload_api_url, '/') . '/' . ltrim($model->image_url, '/'),
+      'features' => [
+        'colors' => $model->colors->map(function ($color) {
+          return [
+            'name' => $color->color_name,
+            'code' => $color->color_hex,
+            'image' => rtrim($this->settings->cdn_url ?? $this->settings->upload_api_url, '/') . '/' . ltrim($color->image_url, '/'),
+          ];
+        })->values(),
+        'images' => $model->images->map(function ($image) {
+          return [
+            'alt' => $image->alt_text,
+            'url' => rtrim($this->settings->cdn_url ?? $this->settings->upload_api_url, '/') . '/' . ltrim($image->image_url, '/'),
+          ];
+        })->values(),
+      ],
+      'options' => $model->specCategories->map(function ($category) {
+        return [
+          'category' => trim($category->name . ' ' . ($category->name_kh ?? '')),
+          'specs' => $category->specs->map(function ($spec) {
+            return [
+              'label' => trim($spec->label . ' ' . ($spec->label_kh ?? '')),
+              'value' => $spec->value,
+            ];
+          })->values(),
+        ];
+      })->values(),
+    ];
+
+    return response()->json($response);
+  }
 }

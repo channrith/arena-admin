@@ -9,22 +9,22 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ApiVehicleToken
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
-    public function handle(Request $request, Closure $next): Response
-    {
-        $settings = SettingHelper::getDefaultSettings();
-        if ($request->header('token') !== $settings->acauto_api_token) {
-            return response([
-                'error' => [
-                    'message' => 'Unauthenticated'
-                ]
-            ], 401);
-        }
-    
-        return $next($request);
+  /**
+   * Handle an incoming request.
+   *
+   * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+   */
+  public function handle(Request $request, Closure $next): Response
+  {
+    $settings = SettingHelper::getDefaultSettings();
+    if ($request->header('token') !== $settings->acauto_api_token) {
+      return response([
+        'error' => [
+          'message' => 'Unauthenticated'
+        ]
+      ], 401);
     }
+
+    return $next($request);
+  }
 }
