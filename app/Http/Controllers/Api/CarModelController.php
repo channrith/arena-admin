@@ -8,6 +8,8 @@ use App\Models\VehicleMaker;
 use App\Models\VehicleModel;
 use App\Models\VehicleSeries;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 
 class CarModelController extends Controller
 {
@@ -45,7 +47,17 @@ class CarModelController extends Controller
       ->distinct()
       ->orderBy('year_of_production', 'desc');
 
+    $totalDistinctYears = (clone $query)->selectRaw('COUNT(DISTINCT year_of_production) as c')->value('c');
     $paginatedYears = $yearsQuery->paginate($perPage);
+
+    // Fix: Laravel's paginate() count ignores DISTINCT and counts all rows; use correct distinct total
+    $paginatedYears = new LengthAwarePaginator(
+      $paginatedYears->items(),
+      $totalDistinctYears,
+      $perPage,
+      $paginatedYears->currentPage(),
+      ['path' => Paginator::resolveCurrentPath(), 'pageName' => $paginatedYears->getPageName()]
+    );
 
     $years = $paginatedYears->pluck('year_of_production');
 
